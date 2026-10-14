@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario CENDIT</title>
+    <title>Inventario CENDIT | Frosted Aura</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -36,7 +36,7 @@
 
         <aside class="sidebar glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div class="top-sidebar">
-                <div class="brand-container" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+                <div class="brand-container" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                     <div class="brand" style="display: flex; align-items: center; gap: 10px; margin: 0;"><i class="fas fa-boxes"></i> <h2>CENDIT</h2></div>
                     <div class="notification-wrapper" style="position: relative;">
                         <button id="bell-btn" class="bell-btn" style="background: transparent; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; position: relative;">
@@ -79,7 +79,7 @@
             <section id="dashboard" class="view-section active">
                 <header class="glass-header">
                     <h1>Dashboard</h1>
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <div class="chart-tabs">
                             <button class="chart-tab active" data-type="doughnut"><i class="fas fa-chart-pie"></i> Torta</button>
                             <button class="chart-tab" data-type="bar"><i class="fas fa-chart-bar"></i> Barras</button>
@@ -129,12 +129,12 @@
             <section id="inventory" class="view-section">
                 <header class="glass-header">
                     <h1>Inventario Global</h1>
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 500px;">
-                        <div class="search-wrapper" style="flex: 1; min-width: 180px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
+                        <div class="search-wrapper" style="flex: 1; min-width: 160px;">
                             <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                            <input type="text" id="search-inventory" class="form-control" placeholder="Buscar en inventario..." style="padding-left: 40px; width: 100%;">
+                            <input type="text" id="search-inventory" class="form-control" placeholder="Buscar..." style="padding-left: 40px; width: 100%;">
                         </div>
-                        <button id="btn-add-item" class="action-btn role-admin-sup-enc hidden"><i class="fas fa-plus"></i> Ingresar Bien</button>
+                        <button id="btn-add-item" class="action-btn role-admin-sup-enc hidden"><i class="fas fa-plus"></i> Ingresar</button>
                     </div>
                 </header>
                 <div id="add-item-form" class="glass-card hidden mb-4">
@@ -220,9 +220,9 @@
             <section id="audit-module" class="view-section">
                 <header class="glass-header">
                     <h1><i class="fas fa-user-secret"></i> Auditoría</h1>
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="date" id="audit-date-from" class="form-control" title="Desde" style="width: 130px;">
-                        <input type="date" id="audit-date-to" class="form-control" title="Hasta" style="width: 130px;">
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="audit-date-from" class="form-control" title="Desde" style="width: 120px;">
+                        <input type="date" id="audit-date-to" class="form-control" title="Hasta" style="width: 120px;">
                         <button id="btn-filter-audit" class="action-btn btn-info"><i class="fas fa-filter"></i></button>
                         <button id="btn-export-audit" class="action-btn"><i class="fas fa-file-pdf"></i></button>
                     </div>
@@ -234,10 +234,10 @@
             <section id="users-module" class="view-section">
                 <header class="glass-header">
                     <h1>Gestión de Usuarios</h1>
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-                        <div class="search-wrapper" style="flex: 1; min-width: 180px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 400px;">
+                        <div class="search-wrapper" style="flex: 1; min-width: 150px;">
                             <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                            <input type="text" id="search-user" class="form-control" placeholder="Buscar usuario..." style="padding-left: 40px; width: 100%;">
+                            <input type="text" id="search-user" class="form-control" placeholder="Buscar..." style="padding-left: 40px; width: 100%;">
                         </div>
                         <button id="btn-add-user" class="action-btn admin-only hidden"><i class="fas fa-user-plus"></i> Registrar</button>
                     </div>

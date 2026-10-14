@@ -90,6 +90,7 @@ export function initChat() {
 
 export function renderChat() {
     const msgContainer = document.getElementById('chat-messages'); 
+    if(!msgContainer) return;
     msgContainer.innerHTML = '';
     
     db.chatMessages.forEach(msg => {
@@ -110,12 +111,12 @@ export function renderChat() {
             if (msgStatus === 'PENDIENTE') {
                 if (isAdmin || (isTarget && canManage)) {
                     actionsHTML = `
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
-                        <button class="action-btn btn-success" style="padding:5px 10px;" onclick="window.resolveLoan(${msg.id}, 'Aprobado')">Aprobar Entrega</button>
-                        <button class="action-btn btn-danger" style="padding:5px 10px;" onclick="window.resolveLoan(${msg.id}, 'Rechazado')">Rechazar</button>
+                    <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="action-btn btn-success" style="padding:6px 12px; font-size:0.85rem;" onclick="window.resolveLoan(${msg.id}, 'Aprobado')">Aprobar</button>
+                        <button class="action-btn btn-danger" style="padding:6px 12px; font-size:0.85rem;" onclick="window.resolveLoan(${msg.id}, 'Rechazado')">Rechazar</button>
                     </div>`;
                 } else {
-                    actionsHTML = `<strong style="display:block; margin-top:10px;">Estado: <span style="color: var(--warning)">Pendiente (Esperando Aprobación)</span></strong>`;
+                    actionsHTML = `<strong style="display:block; margin-top:8px;">Estado: <span style="color: var(--warning)">Pendiente (Esperando Aprobación)</span></strong>`;
                 }
             } 
             else if (msgStatus === 'APROBADO Y ENVIADO') {
@@ -123,21 +124,21 @@ export function renderChat() {
                     const pendingItemIndex = db.inventory.findIndex(i => i.pendingAction && i.pendingEmail === msg.authorEmail);
                     if(pendingItemIndex !== -1) {
                         actionsHTML = `
-                        <div style="margin-top: 10px;">
-                            <button class="action-btn btn-success" style="padding:5px 10px;" onclick="window.openConfirmReceiptFromChat(${pendingItemIndex}, ${msg.id})">
+                        <div style="margin-top: 8px;">
+                            <button class="action-btn btn-success" style="padding:6px 12px; font-size:0.85rem;" onclick="window.openConfirmReceiptFromChat(${pendingItemIndex}, ${msg.id})">
                                 <i class="fas fa-check-double"></i> Confirmar Recepción
                             </button>
                         </div>`;
                     } else {
-                        actionsHTML = `<strong style="display:block; margin-top:10px;">Estado: <span style="color: var(--success)"><i class="fas fa-check-circle"></i> Recibido</span></strong>`;
+                        actionsHTML = `<strong style="display:block; margin-top:8px;">Estado: <span style="color: var(--success)"><i class="fas fa-check-circle"></i> Recibido</span></strong>`;
                     }
                 } else {
-                    actionsHTML = `<strong style="display:block; margin-top:10px;">Estado: <span style="color: var(--info)"><i class="fas fa-truck"></i> Enviado al Solicitante</span></strong>`;
+                    actionsHTML = `<strong style="display:block; margin-top:8px;">Estado: <span style="color: var(--info)"><i class="fas fa-truck"></i> Enviado al Solicitante</span></strong>`;
                 }
             }
             else {
                 let colorClass = msgStatus.includes('COMPLETADO') || msgStatus.includes('APROBADO') ? 'var(--success)' : 'var(--danger)';
-                actionsHTML = `<strong style="display:block; margin-top:10px;">Estado: <span style="color: ${colorClass}">${msg.status}</span></strong>`;
+                actionsHTML = `<strong style="display:block; margin-top:8px;">Estado: <span style="color: ${colorClass}">${msg.status}</span></strong>`;
             }
 
             const isOwnClass = isSource ? 'own' : '';
@@ -199,15 +200,15 @@ window.resolveLoan = function(id, action) {
         const exactMatches = available.filter(i => (i.name||'').toLowerCase().includes(msg.item.toLowerCase()) || (i.cat||'').toLowerCase().includes(msg.item.toLowerCase()));
 
         if (exactMatches.length > 0) {
-            let html = `<p style="color:var(--success); font-size:0.85rem; margin-bottom:10px;"><i class="fas fa-star"></i> El sistema encontró estos bienes disponibles en ${msg.to}:</p>`;
-            exactMatches.forEach((i, idx) => { html += `<label class="checklist-item" style="border-left: 3px solid var(--success); padding: 5px 10px; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; background: rgba(16, 185, 129, 0.1); border-radius: 5px; cursor: pointer;"><input type="radio" name="chat_suggested_item" value="${i.id}" ${idx === 0 ? 'checked' : ''}><span style="flex:1;"><strong>${i.name}</strong> <small style="color:var(--text-secondary)">(${i.id})</small></span></label>`; });
+            let html = `<p style="color:var(--success); font-size:0.85rem; margin-bottom:8px;"><i class="fas fa-star"></i> Bienes disponibles en ${msg.to}:</p>`;
+            exactMatches.forEach((i, idx) => { html += `<label class="checklist-item" style="border-left: 3px solid var(--success); padding: 5px 8px; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; background: rgba(16, 185, 129, 0.1); border-radius: 5px; cursor: pointer;"><input type="radio" name="chat_suggested_item" value="${i.id}" ${idx === 0 ? 'checked' : ''}><span style="flex:1;"><strong>${i.name}</strong> <small style="color:var(--text-secondary)">(${i.id})</small></span></label>`; });
             suggestionsContainer.innerHTML = html; suggestionsContainer.classList.remove('hidden');
             
             selectedIdInput.value = exactMatches[0].id; selectedNameInput.value = `${exactMatches[0].name} (${exactMatches[0].id})`;
             document.querySelectorAll('input[name="chat_suggested_item"]').forEach(radio => { radio.onchange = (e) => { const selected = exactMatches.find(item => item.id === e.target.value); selectedIdInput.value = selected.id; selectedNameInput.value = `${selected.name} (${selected.id})`; }; });
             document.getElementById('btn-open-inventory-selector').innerHTML = '<i class="fas fa-search"></i> Buscar Otro';
         } else {
-            suggestionsContainer.innerHTML = `<div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 10px; border-radius: 6px; margin-bottom: 10px;"><p style="color:var(--warning); font-size:0.9rem; margin:0;"><i class="fas fa-exclamation-triangle"></i> No hay bienes disponibles en ${msg.to} que coincidan con <strong>"${msg.item}"</strong>. Búscalo manualmente.</p></div>`;
+            suggestionsContainer.innerHTML = `<div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); padding: 8px; border-radius: 6px; margin-bottom: 10px;"><p style="color:var(--warning); font-size:0.85rem; margin:0;"><i class="fas fa-exclamation-triangle"></i> No hay bienes en ${msg.to} para <strong>"${msg.item}"</strong>. Búscalo manualmente.</p></div>`;
             suggestionsContainer.classList.remove('hidden'); document.getElementById('btn-open-inventory-selector').innerHTML = '<i class="fas fa-search"></i> Buscar Bien';
         }
         document.getElementById('btn-open-inventory-selector').onclick = () => { openInventorySelector(msg.item, msg.to); };
@@ -230,10 +231,10 @@ function openInventorySelector(requestedItem, sourceUnit) {
             const isMatch = (i.name||'').toLowerCase().includes((requestedItem||'').toLowerCase());
             const tr = document.createElement('tr');
             if (isMatch) tr.style.background = 'rgba(16, 185, 129, 0.1)'; 
-            tr.innerHTML = `<td><strong>${i.id}</strong></td><td>${isMatch ? '<i class="fas fa-star" style="color:var(--success);"></i> ' : ''}${i.name}</td><td>${i.cat}</td><td><span style="color:var(--success); font-weight:bold;">${i.status}</span></td><td><button type="button" class="action-btn btn-info" style="padding: 5px 10px;"><i class="fas fa-check"></i> Seleccionar</button></td>`;
+            tr.innerHTML = `<td><strong>${i.id}</strong></td><td>${isMatch ? '<i class="fas fa-star" style="color:var(--success);"></i> ' : ''}${i.name}</td><td>${i.cat}</td><td><span style="color:var(--success); font-weight:bold;">${i.status}</span></td><td><button type="button" class="action-btn btn-info" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fas fa-check"></i></button></td>`;
             tr.querySelector('button').onclick = () => {
                 document.getElementById('chat-action-item-id').value = i.id; document.getElementById('chat-action-selected-item-name').value = `${i.name} (${i.id})`;
-                const sug = document.getElementById('chat-action-suggestions'); sug.innerHTML = `<p style="color:var(--info); font-size:0.85rem; margin-bottom:10px;"><i class="fas fa-check-circle"></i> Bien seleccionado manualmente de la lista.</p>`;
+                const sug = document.getElementById('chat-action-suggestions'); sug.innerHTML = `<p style="color:var(--info); font-size:0.85rem; margin-bottom:8px;"><i class="fas fa-check-circle"></i> Bien seleccionado manualmente.</p>`;
                 modal.classList.add('hidden');
             };
             tbody.appendChild(tr);
@@ -243,5 +244,5 @@ function openInventorySelector(requestedItem, sourceUnit) {
     const matches = available.filter(i => (i.name||'').toLowerCase().includes((requestedItem||'').toLowerCase())); const others = available.filter(i => !matches.includes(i)); renderList([...matches, ...others]);
     searchInput.value = '';
     searchInput.onkeyup = function() { const val = this.value.toLowerCase(); const filtered = available.filter(i => (i.name||'').toLowerCase().includes(val) || (i.id||'').toLowerCase().includes(val) || (i.cat||'').toLowerCase().includes(val)); renderList(filtered); };
-    modal.classList.remove('hidden');
+    modal.classList.add('hidden');
 }

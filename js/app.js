@@ -134,7 +134,6 @@ export function refreshCustomSelects() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Control del Menú Hamburguesa para móviles
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.getElementById('sidebar-overlay');
@@ -170,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.currentTarget.classList.add('active');
             document.getElementById(e.currentTarget.getAttribute('data-target')).classList.add('active');
             
-            // Cerrar menú móvil al navegar
             if(sidebar) sidebar.classList.remove('active');
             if(overlay) overlay.classList.remove('active');
 
