@@ -33,13 +33,18 @@ body { background: var(--bg-main); color: var(--text-primary); min-height: 100vh
 .glass-card:hover, .glass-card:focus-within { z-index: 50; } 
 .glass-header { padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%; }
 
-/* Contenedor Adaptativo Extremo (Mobile First / Desktop Fluid) */
-.app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
-.sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); padding: 20px; display: flex; flex-direction: column; z-index: 100; height: 100%; overflow-y: auto; }
+/* Contenedor Adaptativo */
+.app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; position: relative; }
+.sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); padding: 20px; display: flex; flex-direction: column; z-index: 1000; height: 100%; overflow-y: auto; transition: transform 0.3s ease; }
 .main-content { flex: 1; padding: 25px; overflow-y: auto; height: 100%; width: 100%; min-width: 0; }
 .view-section { display: none; animation: fadeIn 0.4s; width: 100%; }
 .view-section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Botón Hamburguesa */
+.mobile-menu-btn { display: none; position: fixed; top: 15px; left: 15px; z-index: 11000; background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); align-items: center; justify-content: center; }
+.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 900; }
+.sidebar-overlay.active { display: block; }
 
 .nav-btn { width: 100%; padding: 12px 14px; margin-bottom: 6px; background: transparent; border: none; border-radius: 10px; color: var(--text-primary); text-align: left; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
 .nav-btn:hover, .nav-btn.active { background: var(--accent); color: #ffffff; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transform: translateX(5px); }
@@ -51,7 +56,7 @@ body { background: var(--bg-main); color: var(--text-primary); min-height: 100vh
 .form-control { width: 100%; padding: 10px 14px; background: rgba(255, 255, 255, 0.5); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 0.9rem; backdrop-filter: blur(5px); transition: all 0.3s ease; box-sizing: border-box; }
 [data-theme="dark"] .form-control { background: rgba(0, 0, 0, 0.3); color: white; }
 .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
-.search-wrapper { position: relative; display: flex; align-items: center; width: 100%; max-width: 100%; }
+.search-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
 
 .custom-select-container { position: relative; width: 100%; }
 .custom-select-hidden { display: none !important; }
@@ -92,12 +97,10 @@ body { background: var(--bg-main); color: var(--text-primary); min-height: 100vh
 .btn-info { background: var(--info); color: #fff; } .btn-info:hover { background: #0284c7; }
 .btn-success { background: var(--success); color: #fff; } .btn-success:hover { background: #059669; }
 
-/* Modales Adaptativos perfectos para móviles */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); z-index: 20000; display: flex; justify-content: center; align-items: center; padding: 10px; }
 .modal-content { width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto !important; animation: scaleIn 0.3s; padding: 20px; } 
 @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* Tablas con scroll táctil horizontal suave */
 .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
 table { width: 100%; border-collapse: collapse; min-width: 550px; }
 th, td { padding: 12px 14px; border-bottom: 1px solid var(--glass-border); text-align: left; font-size: 0.9rem; }
@@ -138,22 +141,21 @@ th { font-weight: 600; color: var(--text-secondary); text-transform: uppercase; 
 .unit-chip { display: inline-block; padding: 6px 12px; background: var(--accent); color: white; border-radius: 20px; margin: 4px; font-weight: 600; font-size: 0.85rem; }
 .w-100 { width: 100%; } .w-50 { flex: 1; min-width: 200px; } .justify-center { justify-content: center; } .mt-4 { margin-top: 15px; } .mb-4 { margin-bottom: 15px; }
 
-/* REGLAS RESPONSIVE AVANZADAS (DESDE TELÉFONOS HASTA ESCRITORIOS GRANDES) */
+/* MEDIA QUERIES: MODO HAMBURGUESA FLOTANTE PARA MÓVILES Y TABLETS */
 @media screen and (max-width: 992px) {
-    .app-container { flex-direction: column; height: 100vh; overflow-y: auto; }
-    .sidebar { width: 100%; min-width: 100%; height: auto; max-height: 240px; position: relative; border-radius: 0 0 15px 15px; padding: 15px; }
-    .main-content { padding: 15px; height: auto; overflow-y: visible; width: 100%; }
-    .glass-header { flex-direction: column; align-items: stretch; gap: 10px; }
+    .mobile-menu-btn { display: flex; }
+    .app-container { flex-direction: row; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; transform: translateX(-100%); background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid var(--glass-border); box-shadow: 10px 0 30px rgba(0,0,0,0.5); z-index: 10000; transition: transform 0.3s ease-in-out; }
+    .sidebar.active { transform: translateX(0); }
+    .main-content { padding: 75px 15px 15px 15px; width: 100%; height: 100vh; }
+    .glass-header { flex-direction: column; align-items: stretch; gap: 10px; padding: 15px; }
     .glass-header > div { width: 100%; justify-content: space-between; flex-wrap: wrap; }
     .search-wrapper input { width: 100% !important; }
-    .form-row { gap: 10px; }
-    .w-50 { width: 100%; min-width: 100%; }
 }
 
 @media screen and (max-width: 576px) {
-    .sidebar { max-height: 220px; }
     .glass-card { padding: 15px; }
     .chart-tabs { width: 100%; justify-content: center; }
     .action-btn, .submit-btn { width: 100%; }
-    .glass-header h1 { font-size: 1.4rem; }
+    .glass-header h1 { font-size: 1.3rem; }
 }

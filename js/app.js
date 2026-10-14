@@ -134,6 +134,22 @@ export function refreshCustomSelects() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Control del Menú Hamburguesa para móviles
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    if (mobileMenuBtn && sidebar && overlay) {
+        mobileMenuBtn.onclick = () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        };
+        overlay.onclick = () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        };
+    }
+
     document.onclick = (e) => {
         if(!e.target.closest('.custom-select-container') && !e.target.closest('.custom-autocomplete')) {
             document.querySelectorAll('.custom-select-list, .autocomplete-list').forEach(l => l.classList.add('hidden'));
@@ -154,6 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.currentTarget.classList.add('active');
             document.getElementById(e.currentTarget.getAttribute('data-target')).classList.add('active');
             
+            // Cerrar menú móvil al navegar
+            if(sidebar) sidebar.classList.remove('active');
+            if(overlay) overlay.classList.remove('active');
+
             if(e.currentTarget.getAttribute('data-target') === 'my-items-module') renderMisBienesTable();
             if(e.currentTarget.getAttribute('data-target') === 'loans-module') renderPrestamosTables();
         };
