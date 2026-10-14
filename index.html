@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario CENDIT | Frosted Aura</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div id="toast-container"></div>
+    <button id="theme-toggle" class="theme-bubble"><i class="fas fa-sun"></i></button>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-view" class="login-container active">
+        <div class="glass-card login-box">
+            <h2><i class="fas fa-boxes"></i> Inventario CENDIT</h2>
+            <p style="margin-bottom: 25px; color: var(--text-secondary);">Inicia sesión para continuar</p>
+            <form id="login-form">
+                <div class="form-group"><input type="email" id="login-email" class="form-control" placeholder="admin@cendit.gob.ve" required></div>
+                <div class="form-group"><input type="password" id="login-password" class="form-control" placeholder="1234" required></div>
+                <button type="submit" class="submit-btn w-100 mt-4">Ingresar al Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APLICACIÓN PRINCIPAL -->
+    <div id="app-view" class="app-container" style="display: none;">
+        <aside class="sidebar glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="top-sidebar">
+                <div class="brand-container" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                    <div class="brand" style="display: flex; align-items: center; gap: 10px; margin: 0;"><i class="fas fa-boxes"></i> <h2>CENDIT</h2></div>
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button id="bell-btn" class="bell-btn" style="background: transparent; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; position: relative;">
+                            <i class="fas fa-bell"></i><span id="notif-badge" class="badge">0</span>
+                        </button>
+                        <div id="notif-panel" class="notif-panel glass-card hidden">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 10px;">
+                                <h4 style="margin: 0;">Notificaciones</h4>
+                                <button id="close-notif-btn" style="background: transparent; border: none; color: var(--danger); cursor: pointer;"><i class="fas fa-times"></i></button>
+                            </div>
+                            <ul id="notif-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+                        </div>
+                    </div>
+                </div>
+                <nav id="main-nav">
+                    <button class="nav-btn active" data-target="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+                    <button class="nav-btn" data-target="my-items-module"><i class="fas fa-laptop-house"></i> Mis Bienes</button>
+                    <button class="nav-btn" data-target="inventory"><i class="fas fa-box-open"></i> Inventario Global</button>
+                    <button class="nav-btn" data-target="requisitions-module"><i class="fas fa-file-signature"></i> Requisiciones</button>
+                    <button class="nav-btn" data-target="loans-module"><i class="fas fa-exchange-alt"></i> Control de Préstamos</button>
+                    <button class="nav-btn" data-target="org-structure"><i class="fas fa-sitemap"></i> Estructura</button>
+                    <button class="nav-btn" data-target="chat"><i class="fas fa-comments"></i> Solicitudes Externas</button>
+                    <button class="nav-btn role-admin-sup-enc hidden" data-target="history-module"><i class="fas fa-history"></i> Histórico Mov.</button>
+                    <button class="nav-btn admin-only hidden" data-target="audit-module"><i class="fas fa-user-secret"></i> Auditoría</button>
+                    <button class="nav-btn admin-only hidden" data-target="users-module"><i class="fas fa-users-cog"></i> Gestión Usuarios</button>
+                    <button class="nav-btn admin-only hidden" data-target="backup-module"><i class="fas fa-database"></i> Respaldo Sistema</button>
+                </nav>
+            </div>
+            <div class="bottom-sidebar" style="border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <div class="user-info" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div class="avatar"><i class="fas fa-user"></i></div>
+                    <div class="details"><span id="current-user-name">Usuario</span><small id="current-user-role" style="display: block; color: var(--text-secondary);">Rol</small></div>
+                </div>
+                <button id="logout-btn" class="action-btn btn-danger w-100 justify-center"><i class="fas fa-sign-out-alt"></i> Salir del Sistema</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- DASHBOARD -->
+            <section id="dashboard" class="view-section active">
+                <header class="glass-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h1>Dashboard</h1>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" data-type="doughnut"><i class="fas fa-chart-pie"></i> Torta</button>
+                            <button class="chart-tab" data-type="bar"><i class="fas fa-chart-bar"></i> Barras</button>
+                            <button class="chart-tab" data-type="polarArea"><i class="fas fa-bullseye"></i> Polar</button>
+                        </div>
+                        <button id="btn-export-pdf" class="action-btn"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                    </div>
+                </header>
+                <div class="charts-grid"><div class="glass-card chart-container"><canvas id="pieChart"></canvas></div><div class="glass-card chart-container"><canvas id="barChart"></canvas></div></div>
+            </section>
+
+            <!-- MIS BIENES -->
+            <section id="my-items-module" class="view-section">
+                <header class="glass-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h1>Mis Bienes Asignados</h1>
+                    <button id="btn-export-my-items" class="action-btn"><i class="fas fa-file-pdf"></i> Exportar Mis Bienes</button>
+                </header>
+                <div class="glass-card table-container">
+                    <p style="color:var(--text-secondary); margin-bottom:10px;"><i class="fas fa-info-circle"></i> Aquí solo ves los equipos que están bajo tu responsabilidad o inventario de la unidad.</p>
+                    <table id="my-items-table" class="hover-table"><thead><tr><th>ID</th><th>Bien</th><th>Categoría</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                </div>
+            </section>
+
+            <!-- CONTROL DE PRÉSTAMOS -->
+            <section id="loans-module" class="view-section">
+                <header class="glass-header"><h1>Control de Préstamos (Inter-Unidades)</h1></header>
+                
+                <div class="glass-card mb-4 table-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="color: var(--warning); margin:0;"><i class="fas fa-hand-holding"></i> Bienes que nos han prestado</h3>
+                        <button id="btn-export-borrowed" class="action-btn" style="font-size:0.85rem; padding: 8px 15px;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                    </div>
+                    <p style="color:var(--text-secondary); margin-bottom:10px; font-size: 0.85rem;">Equipos de otras unidades que están actualmente asignados a tu unidad.</p>
+                    <table id="borrowed-items-table" class="hover-table"><thead><tr><th>ID</th><th>Bien</th><th>Dueño Original</th><th>Estado / Fecha</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                </div>
+                
+                <div class="glass-card table-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="color: var(--info); margin:0;"><i class="fas fa-paper-plane"></i> Bienes que hemos prestado</h3>
+                        <button id="btn-export-lent" class="action-btn" style="font-size:0.85rem; padding: 8px 15px;"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                    </div>
+                    <p style="color:var(--text-secondary); margin-bottom:10px; font-size: 0.85rem;">Equipos de tu unidad que están actualmente en manos de otras unidades.</p>
+                    <table id="lent-items-table" class="hover-table"><thead><tr><th>ID</th><th>Bien</th><th>Prestado a (Unidad)</th><th>Estado / Fecha</th></tr></thead><tbody></tbody></table>
+                </div>
+            </section>
+
+            <!-- INVENTARIO GLOBAL -->
+            <section id="inventory" class="view-section">
+                <header class="glass-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h1>Inventario Global</h1>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" id="search-inventory" class="form-control" placeholder="Buscar en inventario..." style="padding-left: 40px; width: 250px;">
+                        </div>
+                        <button id="btn-add-item" class="action-btn role-admin-sup-enc hidden"><i class="fas fa-plus"></i> Ingresar Bien</button>
+                    </div>
+                </header>
+                <div id="add-item-form" class="glass-card hidden mb-4">
+                    <form id="inventory-form">
+                        <div class="form-row">
+                            <div class="form-group"><label class="input-label">Nombre del Bien</label><input type="text" id="item-name" class="form-control" required></div>
+                            <div class="form-group"><label class="input-label">Categoría</label>
+                                <select id="item-category" class="form-control custom-select" required>
+                                    <option value="" disabled selected>Seleccione...</option>
+                                    <option value="Equipos IT">Equipos IT</option>
+                                    <option value="Mobiliario">Mobiliario</option>
+                                    <option value="Herramientas">Herramientas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group w-50">
+                                <label class="input-label">Asignar a Empleado (Dejar blanco para asignar a la Unidad)</label>
+                                <div class="custom-autocomplete">
+                                    <input type="text" id="item-assigned" class="form-control" placeholder="Escribe iniciales (Ej. LUI)..." autocomplete="off">
+                                    <ul id="item-assigned-list" class="autocomplete-list hidden"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn mt-2">Guardar Bien</button>
+                    </form>
+                </div>
+                <div class="glass-card table-container"><table id="inventory-table" class="hover-table"><thead><tr><th>ID</th><th>Bien</th><th>Asignado A</th><th>Unidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+            </section>
+
+            <!-- REQUISICIONES -->
+            <section id="requisitions-module" class="view-section">
+                <header class="glass-header"><h1>Requisiciones y Compras</h1></header>
+                <div class="glass-card mb-4">
+                    <h3 style="margin-bottom: 20px;"><i class="fas fa-cart-plus"></i> Solicitar Compra de Bien Faltante</h3>
+                    <form id="req-form">
+                        <div class="form-row">
+                            <div class="form-group"><label class="input-label">Nombre del Artículo</label><input type="text" id="req-item-name" class="form-control" required></div>
+                            <div class="form-group"><label class="input-label">Link de Referencia (URL)</label><input type="url" id="req-item-link" class="form-control" placeholder="https://mercadolibre.com/..." required></div>
+                        </div>
+                        <div class="form-row"><div class="form-group w-100"><label class="input-label">Justificación</label><input type="text" id="req-item-justification" class="form-control" required></div></div>
+                        <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Enviar a Supervisor</button>
+                    </form>
+                </div>
+                <div class="glass-card table-container"><table id="requisitions-table"><thead><tr><th>Fecha</th><th>Solicitante</th><th>Artículo</th><th>Link</th><th>Justificación</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+            </section>
+
+            <!-- ESTRUCTURA -->
+            <section id="org-structure" class="view-section">
+                <header class="glass-header"><h1>Estructura del Organigrama</h1></header>
+                <div class="cards-grid mb-4">
+                    <div class="glass-card"><h3><i class="fas fa-building"></i> Nueva Dirección</h3><div class="form-group mt-2"><input type="text" id="new-dir-name" class="form-control mt-2"></div><button id="add-dir-btn" class="action-btn w-100 justify-center">Crear Dirección</button></div>
+                    <div class="glass-card">
+                        <h3><i class="fas fa-users"></i> Nueva Unidad</h3>
+                        <div class="form-group mt-2"><input type="text" id="new-unit-name" class="form-control mb-2" placeholder="Nombre Unidad">
+                            <select id="assign-dir-select" class="form-control custom-select mb-4" required></select>
+                        </div>
+                        <button id="add-unit-btn" class="action-btn w-100 justify-center mt-2">Asignar Unidad</button>
+                    </div>
+                </div>
+                <div class="glass-card mt-4"><div id="org-drag-container"></div></div>
+            </section>
+
+            <!-- CHAT Y PRÉSTAMOS EXTERNOS -->
+            <section id="chat" class="view-section">
+                <header class="glass-header"><h1>Comunicaciones y Solicitudes Externas</h1></header>
+                <div class="glass-card mb-4">
+                    <h3 style="margin-bottom: 20px;">Nueva Solicitud Externa</h3>
+                    <div class="form-row">
+                        <div class="form-group"><label class="input-label">Dirección</label><select id="chat-dir-select" class="form-control custom-select" required></select></div>
+                        <div class="form-group"><label class="input-label">Unidad</label><select id="chat-unit-select" class="form-control custom-select" required></select></div>
+                        <div class="form-group"><label class="input-label">Mensaje / Bien</label><input type="text" id="chat-item-req" class="form-control" placeholder="Ej. Osciloscopio"></div>
+                    </div>
+                    <button id="send-loan-req" class="submit-btn mt-2">Enviar Solicitud</button>
+                </div>
+                <div class="chat-container glass-card"><div class="messages" id="chat-messages"></div></div>
+            </section>
+            
+            <!-- HISTÓRICO -->
+            <section id="history-module" class="view-section"><header class="glass-header"><h1>Histórico de Movimientos</h1></header><div class="glass-card table-container"><table id="history-table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalles</th></tr></thead><tbody></tbody></table></div></section>
+            
+            <!-- AUDITORÍA -->
+            <section id="audit-module" class="view-section">
+                <header class="glass-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h1><i class="fas fa-user-secret"></i> Auditoría del Sistema</h1>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="audit-date-from" class="form-control" title="Desde">
+                        <input type="date" id="audit-date-to" class="form-control" title="Hasta">
+                        <button id="btn-filter-audit" class="action-btn btn-info"><i class="fas fa-filter"></i> Filtrar</button>
+                        <button id="btn-export-audit" class="action-btn"><i class="fas fa-file-pdf"></i> Exportar</button>
+                    </div>
+                </header>
+                <div class="glass-card table-container">
+                    <p style="color:var(--text-secondary); margin-bottom:10px;"><i class="fas fa-eye"></i> Registro inmutable de toda la actividad del sistema (Solo Admin).</p>
+                    <table id="audit-table" class="hover-table"><thead><tr><th>Fecha / Hora</th><th>Usuario / Correo</th><th>Acción Realizada</th><th>IP / MAC (Red)</th></tr></thead><tbody></tbody></table>
+                </div>
+            </section>
+
+            <!-- USUARIOS -->
+            <section id="users-module" class="view-section">
+                <header class="glass-header" style="flex-wrap: wrap; gap: 15px;">
+                    <h1>Gestión de Usuarios</h1>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" id="search-user" class="form-control" placeholder="Buscar usuario..." style="padding-left: 40px; width: 250px;">
+                        </div>
+                        <button id="btn-add-user" class="action-btn admin-only hidden"><i class="fas fa-user-plus"></i> Registrar Usuario</button>
+                    </div>
+                </header>
+                <div class="glass-card table-container"><table id="users-table" class="hover-table"><thead><tr><th>Nombre</th><th>Cédula</th><th>Rol</th><th>Dirección/Unidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+            </section>
+            
+            <!-- RESPALDO -->
+            <section id="backup-module" class="view-section">
+                <header class="glass-header"><h1>Respaldo y Restauración</h1></header>
+                <div class="cards-grid">
+                    <div class="glass-card text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-export" style="font-size: 3rem; color: var(--success); margin-bottom: 15px;"></i><button id="btn-export-db" class="action-btn w-100 justify-center"><i class="fas fa-download"></i> Descargar Respaldo JSON</button>
+                    </div>
+                    <div class="glass-card text-center" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-import" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
+                        <div class="form-group w-100" style="margin-bottom: 10px;">
+                             <label for="import-db-file" class="action-btn w-100 justify-center" style="cursor: pointer; background: rgba(255,255,255,0.1); border: 1px dashed var(--glass-border); color: var(--text-primary);">
+                                <i class="fas fa-folder-open"></i> <span id="import-file-name" style="margin-left: 10px;">Seleccionar archivo JSON</span>
+                            </label>
+                            <input type="file" id="import-db-file" accept=".json" style="display:none;">
+                        </div>
+                        <button id="btn-import-db" class="submit-btn w-100 justify-center"><i class="fas fa-upload"></i> Restaurar JSON</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ===================== MODALES GLOBALES ===================== -->
+    
+    <!-- TRASPASO -->
+    <div id="transfer-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="overflow: visible;">
+            <h2 style="color: var(--warning); margin-bottom: 20px;"><i class="fas fa-exchange-alt"></i> Traspasar Bien</h2>
+            <form id="transfer-form">
+                <input type="hidden" id="transfer-item-index">
+                <div class="form-group">
+                    <label class="input-label">Nuevo Responsable (Para pasarlo a otra Unidad, déjalo en blanco)</label>
+                    <div class="custom-autocomplete">
+                        <input type="text" id="transfer-assigned" class="form-control" placeholder="Escribe iniciales o déjalo en blanco..." autocomplete="off">
+                        <ul id="transfer-assigned-list" class="autocomplete-list hidden"></ul>
+                    </div>
+                </div>
+                <div class="form-group"><label class="input-label">O Asignar directamente a una Unidad</label><select id="transfer-unit-select" class="form-control custom-select"></select></div>
+                <div class="form-group"><label class="input-label">Observaciones del Traspaso (Estado del bien)</label><textarea id="transfer-obs" class="form-control" rows="3" required></textarea></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('transfer-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Notificar Traspaso</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRÉSTAMO -->
+    <div id="loan-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="overflow: visible;">
+            <h2 style="color: var(--info); margin-bottom: 20px;"><i class="fas fa-handshake"></i> Prestar Bien</h2>
+            <form id="loan-form">
+                <input type="hidden" id="loan-item-index">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="input-label">Prestar a (Usuario Obligatorio)</label>
+                        <div class="custom-autocomplete">
+                            <input type="text" id="loan-target" class="form-control" placeholder="Buscar..." autocomplete="off" required>
+                            <ul id="loan-target-list" class="autocomplete-list hidden"></ul>
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="input-label">Fecha Límite Devolución</label><input type="date" id="loan-date" class="form-control" required></div>
+                </div>
+                <div class="form-group"><label class="input-label">Observaciones (Estado al entregar)</label><textarea id="loan-obs" class="form-control" rows="2" required></textarea></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('loan-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Notificar Préstamo</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmar Recepción -->
+    <div id="confirm-receipt-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-check-double"></i> Confirmar Recepción</h2>
+            <form id="confirm-receipt-form">
+                <input type="hidden" id="confirm-item-index">
+                <div style="background: rgba(0,0,0,0.1); padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <p><strong>Observaciones registradas por el emisor:</strong></p>
+                    <p id="confirm-obs-text" style="color:var(--warning); font-style:italic; margin-top:5px;"></p>
+                </div>
+                <div class="form-group"><label class="input-label">Tus observaciones al recibir (Opcional)</label><textarea id="confirm-my-obs" class="form-control" rows="2"></textarea></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('confirm-receipt-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Confirmar que Recibí</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ACCIÓN DE CHAT (Aprobar/Rechazar) -->
+    <div id="chat-action-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="overflow: visible;">
+            <h2 id="chat-action-title" style="color: var(--accent); margin-bottom: 20px;">Acción de Solicitud</h2>
+            <form id="chat-action-form">
+                <input type="hidden" id="chat-action-id">
+                <input type="hidden" id="chat-action-type">
+                
+                <div id="chat-action-item-container" class="hidden">
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">Bien a Enviar:</p>
+                    <div id="chat-action-suggestions" style="margin-bottom: 15px;" class="hidden"></div>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <input type="text" id="chat-action-selected-item-name" class="form-control" placeholder="Ningún bien seleccionado..." readonly required>
+                        <input type="hidden" id="chat-action-item-id">
+                        <button type="button" id="btn-open-inventory-selector" class="action-btn btn-info" style="white-space: nowrap;"><i class="fas fa-search"></i> Buscar Bien</button>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="radio" name="chat_action_mode" value="prestamo" checked> Como Préstamo</label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;"><input type="radio" name="chat_action_mode" value="traspaso"> Como Traspaso</label>
+                    </div>
+                    <div class="form-group" id="chat-action-date-group">
+                        <label class="input-label">Fecha Límite Devolución</label>
+                        <input type="date" id="chat-action-return-date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group"><label class="input-label">Observaciones para el usuario</label><textarea id="chat-action-obs" class="form-control" rows="3" required></textarea></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('chat-action-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Procesar Acción</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pantalla Adicional (Modal) para Seleccionar del Inventario Completo -->
+    <div id="select-inventory-modal" class="modal-overlay hidden" style="z-index: 30000;">
+        <div class="glass-card modal-content" style="max-width: 800px; width: 90%; max-height: 85vh; display: flex; flex-direction: column;">
+            <h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-boxes"></i> Seleccionar Bien del Inventario</h2>
+            <div class="search-wrapper mb-4">
+                <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <input type="text" id="search-select-inventory" class="form-control" placeholder="Buscar por Nombre, ID o Categoría..." style="padding-left: 40px;">
+            </div>
+            <div class="table-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--glass-border);">
+                <table id="select-inventory-table" class="hover-table" style="margin: 0;">
+                    <thead style="position: sticky; top: 0; background: var(--glass-bg); z-index: 10;"><tr><th>ID</th><th>Bien</th><th>Categoría</th><th>Estado</th><th>Acción</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="form-row mt-4" style="justify-content: flex-end; margin-bottom: 0;">
+                <button type="button" class="action-btn btn-danger" onclick="document.getElementById('select-inventory-modal').classList.add('hidden')">Cancelar Selección</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completar Requisición -->
+    <div id="complete-req-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-clipboard-check"></i> Registrar Compra</h2>
+            <form id="complete-req-form">
+                <input type="hidden" id="comp-req-id">
+                <div class="form-group"><label class="input-label">Nombre del Bien Confirmado</label><input type="text" id="comp-req-name" class="form-control" required></div>
+                <div class="form-row">
+                    <div class="form-group w-50">
+                        <label class="input-label"><i class="fas fa-camera"></i> Fotografía</label>
+                        <label for="comp-req-photo" class="form-control" style="cursor: pointer; background: rgba(0,0,0,0.2); border: 1px dashed var(--accent); text-align: center;"><i class="fas fa-upload"></i> <span id="comp-req-photo-name">Seleccionar Imagen</span></label>
+                        <input type="file" id="comp-req-photo" accept="image/*" style="display:none;" required>
+                    </div>
+                    <div class="form-group w-50">
+                        <label class="input-label"><i class="fas fa-file-invoice"></i> Factura PDF/IMG</label>
+                        <label for="comp-req-invoice" class="form-control" style="cursor: pointer; background: rgba(0,0,0,0.2); border: 1px dashed var(--accent); text-align: center;"><i class="fas fa-upload"></i> <span id="comp-req-invoice-name">Seleccionar Archivo</span></label>
+                        <input type="file" id="comp-req-invoice" accept="image/*,.pdf" style="display:none;" required>
+                    </div>
+                </div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('complete-req-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn" id="btn-save-req-item"><i class="fas fa-save"></i> Guardar en Inventario</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Detalles del Bien -->
+    <div id="item-details-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"><i class="fas fa-box-open"></i></div><h2 id="detail-name" style="margin-bottom: 5px;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 20px;"><strong>ID:</strong> <span id="detail-id"></span></p><div id="detail-images" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div><div style="text-align: left; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><p><strong><i class="fas fa-tags"></i> Categoría:</strong> <span id="detail-cat"></span></p><p><strong><i class="fas fa-sitemap"></i> Unidad Actual:</strong> <span id="detail-unit"></span></p><p><strong><i class="fas fa-user-tag"></i> Responsable:</strong> <span id="detail-assigned"></span></p><p><strong><i class="fas fa-check-circle"></i> Estado:</strong> <span id="detail-status" style="color: var(--success);"></span></p><p><strong><i class="fas fa-comment-dots"></i> Obs:</strong> <span id="detail-obs" style="color: var(--warning);"></span></p></div><button class="action-btn btn-danger w-100 justify-center" onclick="document.getElementById('item-details-modal').classList.add('hidden')">Cerrar</button></div></div>
+
+    <!-- Edición de Bien -->
+    <div id="edit-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="overflow: visible;"><h2 style="color:var(--accent);"><i class="fas fa-edit"></i> Editar Bien</h2><form id="edit-inventory-form"><input type="hidden" id="edit-item-index"><div class="form-group mt-2"><label class="input-label">Nombre</label><input type="text" id="edit-item-name" class="form-control" required></div><div class="form-group mt-2"><label class="input-label">Categoría</label><select id="edit-item-category" class="form-control custom-select" required><option value="Equipos IT">Equipos IT</option><option value="Mobiliario">Mobiliario</option><option value="Herramientas">Herramientas</option></select></div><div class="form-row mt-4" style="justify-content:flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Guardar</button></div></form></div></div>
+    
+    <!-- Modal Usuario -->
+    <div id="user-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="max-width: 600px; overflow: visible;">
+            <h2 id="user-modal-title" style="color: var(--accent); margin-bottom: 15px;"><i class="fas fa-user-edit"></i> Usuario</h2>
+            <div id="profile-card-view" style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); padding-bottom: 20px;">
+                <div style="width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;"><i class="fas fa-user-circle"></i></div>
+                <div>
+                    <h2 id="profile-name" style="margin-bottom: 5px; color: var(--accent);">Nombre</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 8px;"><i class="fas fa-id-card"></i> <span id="profile-cedula"></span> | <i class="fas fa-envelope"></i> <span id="profile-email"></span></p>
+                    <div style="display: flex; gap: 10px;"><span id="profile-role" style="background: var(--info); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">Rol</span><span id="profile-status" style="padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">Estado</span></div>
+                </div>
+            </div>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-row"><div class="form-group"><label class="input-label">Nombre</label><input type="text" id="edit-user-name" class="form-control" required></div><div class="form-group"><label class="input-label">Cédula</label><input type="text" id="edit-user-cedula" class="form-control" required></div></div>
+                <div class="form-row"><div class="form-group"><label class="input-label">Correo (Login)</label><input type="email" id="edit-user-email" class="form-control" required></div></div>
+                <div class="form-row">
+                    <div class="form-group"><label class="input-label">Rol</label>
+                        <select id="edit-user-role" class="form-control custom-select" required>
+                            <option value="ADMIN">Administrador</option><option value="SUPERVISOR">Supervisor</option><option value="ENCARGADO">Encargado</option><option value="VIEWER">Visualizador</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="input-label">Unidad</label><select id="edit-user-unit" class="form-control custom-select" required></select></div>
+                </div>
+                <div id="status-checkbox-container" style="display:flex; gap:10px; align-items:center; background: rgba(239, 68, 68, 0.1); padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);"><input type="checkbox" id="edit-user-status" style="width:18px; height:18px; cursor: pointer;"><span style="color:var(--danger); font-weight:bold;">Inhabilitar Usuario</span></div>
+                <div class="form-row mt-4" style="justify-content: flex-end; border-top: 1px solid var(--glass-border); padding-top: 20px;"><button type="button" class="action-btn" style="background: rgba(255,255,255,0.1); color: var(--text-primary);" onclick="document.getElementById('user-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Guardar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR ORGANIGRAMA -->
+    <div id="edit-org-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="max-width: 400px;">
+            <h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-edit"></i> Editar Nombre</h2>
+            <form id="edit-org-form">
+                <input type="hidden" id="edit-org-oldname">
+                <input type="hidden" id="edit-org-type">
+                <input type="hidden" id="edit-org-parent">
+                <div class="form-group"><label class="input-label">Nuevo Nombre</label><input type="text" id="edit-org-newname" class="form-control" required></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('edit-org-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Actualizar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
