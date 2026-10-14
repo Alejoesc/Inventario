@@ -1,12 +1,11 @@
 import { db, state, addHistory, addNotification, logAudit } from './db.js';
 import { renderNotificaciones } from './notificaciones.js';
 
-// Función que suma o crea el consumible donado en el inventario de la unidad/usuario destino
-export function receiveDonatedConsumable(sourceItem, donateQty, targetUnit, receiverName, receiverEmail, justification) {
+// Función que suma o crea el consumible donado (por unidades/carretes o por metros) en el inventario de la unidad/usuario destino
+export function receiveDonatedConsumable(sourceItem, donateQty, targetUnit, receiverName, receiverEmail, justification, mode = 'unidades') {
     let finalEmail = receiverEmail || '';
     let finalName = receiverName || '';
 
-    // Si escribieron el nombre manualmente sin usar clic en la lista, buscamos su correo en la base de datos
     if (!finalEmail && finalName) {
         const foundUser = db.users.find(u => u.name.toLowerCase() === finalName.toLowerCase());
         if (foundUser) {
@@ -15,7 +14,6 @@ export function receiveDonatedConsumable(sourceItem, donateQty, targetUnit, rece
         }
     }
 
-    // Verificar si la unidad/usuario destino ya tiene registrado ese mismo consumible para sumarle el stock
     const existingItem = db.inventory.find(i => 
         i.cat === 'Consumibles' && 
         i.name.trim().toLowerCase() === sourceItem.name.trim().toLowerCase() && 
@@ -23,17 +21,33 @@ export function receiveDonatedConsumable(sourceItem, donateQty, targetUnit, rece
         (i.assignedEmail || '') === finalEmail
     );
 
+    const hasMeters = (sourceItem.meters || 0) > 0;
+    const donatedMeters = mode === 'metros' ? donateQty : (hasMeters ? donateQty * sourceItem.meters : 0);
+    const donatedUnits = mode === 'metros' ? 1 : donateQty;
+
     if (existingItem) {
-        existingItem.qty = (existingItem.qty ?? 0) + donateQty;
+        if (mode === 'metros' && hasMeters) {
+            existingItem.totalMeters = (existingItem.totalMeters ?? ((existingItem.qty ?? 1) * (existingItem.meters || sourceItem.meters))) + donatedMeters;
+            existingItem.meters = existingItem.meters || sourceItem.meters;
+            existingItem.qty = Math.max(1, Math.ceil(existingItem.totalMeters / existingItem.meters));
+        } else {
+            existingItem.qty = (existingItem.qty ?? 0) + donatedUnits;
+            if (hasMeters) {
+                existingItem.meters = existingItem.meters || sourceItem.meters;
+                existingItem.totalMeters = (existingItem.totalMeters ?? 0) + donatedMeters;
+            }
+        }
         existingItem.status = 'Activo';
-        existingItem.obs = `Recibido por donación de ${sourceItem.unit} (+${donateQty} unid.) | Motivo: ${justification}`;
+        existingItem.obs = `Recibido por donación de ${sourceItem.unit} (+${mode === 'metros' ? donatedMeters + 'm' : donatedUnits + ' unid.'}) | Motivo: ${justification}`;
         return existingItem;
     } else {
         const newDonatedItem = {
             id: 'INV-' + Math.floor(Math.random() * 9000 + 1000),
             name: sourceItem.name,
             cat: 'Consumibles',
-            qty: donateQty,
+            qty: donatedUnits,
+            meters: hasMeters ? (mode === 'metros' ? donatedMeters : sourceItem.meters) : 0,
+            totalMeters: hasMeters ? donatedMeters : 0,
             unit: targetUnit,
             status: 'Activo',
             assignedTo: finalName,
@@ -64,6 +78,55 @@ export function initInventario() {
 
     document.getElementById('btn-add-item').onclick = () => { document.getElementById('add-item-form').classList.toggle('hidden'); };
 
+    // Mostrar/Ocultar campo de Metros cuando se selecciona "Consumibles" en el formulario de ingreso
+    const itemCatSelect = document.getElementById('item-category');
+    const itemMetersGroup = document.getElementById('item-meters-group');
+    const itemQtyInput = document.getElementById('item-qty');
+    const itemMetersInput = document.getElementById('item-meters');
+    const itemMetersPreview = document.getElementById('item-meters-preview');
+    const itemQtyLabel = document.getElementById('item-qty-label');
+
+    const updateMetersCalculationPreview = () => {
+        if (!itemQtyInput || !itemMetersInput || !itemMetersPreview) return;
+        const q = parseInt(itemQtyInput.value) || 0;
+        const m = parseFloat(itemMetersInput.value) || 0;
+        if (m > 0) {
+            itemMetersPreview.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Total calculado: <strong>${q} carrete(s) / unid. de ${m}m = ${q * m} metros en total</strong>`;
+        } else {
+            itemMetersPreview.innerHTML = `Si es cable o fibra, indique cuántos metros trae cada carrete/unidad.`;
+        }
+    };
+
+    if (itemCatSelect && itemMetersGroup) {
+        itemCatSelect.addEventListener('change', () => {
+            if (itemCatSelect.value === 'Consumibles') {
+                itemMetersGroup.classList.remove('hidden');
+                if (itemQtyLabel) itemQtyLabel.textContent = 'Cantidad (Unidades / Carretes)';
+                updateMetersCalculationPreview();
+            } else {
+                itemMetersGroup.classList.add('hidden');
+                if (itemMetersInput) itemMetersInput.value = '';
+                if (itemQtyLabel) itemQtyLabel.textContent = 'Cantidad / Stock Inicial';
+            }
+        });
+    }
+    if (itemQtyInput) itemQtyInput.addEventListener('input', updateMetersCalculationPreview);
+    if (itemMetersInput) itemMetersInput.addEventListener('input', updateMetersCalculationPreview);
+
+    // Mostrar/Ocultar campo de Metros en el modal de Edición
+    const editCatSelect = document.getElementById('edit-item-category');
+    const editMetersGroup = document.getElementById('edit-item-meters-group');
+    if (editCatSelect && editMetersGroup) {
+        editCatSelect.addEventListener('change', () => {
+            if (editCatSelect.value === 'Consumibles') {
+                editMetersGroup.classList.remove('hidden');
+            } else {
+                editMetersGroup.classList.add('hidden');
+                document.getElementById('edit-item-meters').value = '';
+            }
+        });
+    }
+
     document.getElementById('inventory-form').onsubmit = (e) => {
         e.preventDefault();
         const assignedVal = document.getElementById('item-assigned').value;
@@ -78,17 +141,21 @@ export function initInventario() {
 
         const cat = document.getElementById('item-category').value;
         const qty = parseInt(document.getElementById('item-qty').value) || 1;
+        const meters = (cat === 'Consumibles') ? (parseFloat(document.getElementById('item-meters').value) || 0) : 0;
+        const totalMeters = meters > 0 ? (qty * meters) : 0;
 
         const newItem = { 
             id: 'INV-' + Math.floor(Math.random() * 9000 + 1000), 
             name: document.getElementById('item-name').value, 
             cat: cat, 
             qty: qty,
+            meters: meters,
+            totalMeters: totalMeters,
             unit: state.currentUser.unit, 
             status: 'Activo', 
             assignedTo: assignedName, 
             assignedEmail: assignedEmail, 
-            obs: 'Nuevo ingreso', 
+            obs: meters > 0 ? `Ingreso: ${qty} carrete(s) de ${meters}m (${totalMeters}m total)` : 'Nuevo ingreso', 
             pendingAction: null, 
             pendingEmail: null, 
             originalUnit: '' 
@@ -96,16 +163,19 @@ export function initInventario() {
         db.inventory.push(newItem); 
         
         if (cat === 'Consumibles' && qty <= 5) {
-            window.showToast(`¡Atención! Consumible "${newItem.name}" registrado con stock bajo (${qty} disp.).`, 'warning');
-            notifyUnitManagers(newItem.unit, `ALERTA DE STOCK BAJO: El consumible "${newItem.name}" tiene solo ${qty} unidades.`);
+            const stockDesc = meters > 0 ? `${qty} carrete(s) / ${totalMeters}m` : `${qty} disp.`;
+            window.showToast(`¡Atención! Consumible "${newItem.name}" registrado con stock bajo (${stockDesc}).`, 'warning');
+            notifyUnitManagers(newItem.unit, `ALERTA DE STOCK BAJO: El consumible "${newItem.name}" tiene solo ${stockDesc}.`);
         } else {
             window.showToast(`Bien ingresado exitosamente.`);
         }
 
-        addHistory("Ingreso", `Se registró ${newItem.name} (Cant: ${qty})`); 
-        logAudit("Ingreso Inventario", `Registró el bien ${newItem.id} - ${newItem.name} (Cant: ${qty})`);
+        const logDesc = meters > 0 ? `${qty} carrete(s) de ${meters}m (${totalMeters}m)` : `Cant: ${qty}`;
+        addHistory("Ingreso", `Se registró ${newItem.name} (${logDesc})`); 
+        logAudit("Ingreso Inventario", `Registró el bien ${newItem.id} - ${newItem.name} (${logDesc})`);
         e.target.reset(); 
         document.getElementById('item-qty').value = 1;
+        itemMetersGroup.classList.add('hidden');
         document.getElementById('add-item-form').classList.add('hidden'); 
         renderTable(); 
         document.dispatchEvent(new Event('inventoryUpdated'));
@@ -118,17 +188,27 @@ export function initInventario() {
         item.name = document.getElementById('edit-item-name').value; 
         item.cat = document.getElementById('edit-item-category').value;
         item.qty = parseInt(document.getElementById('edit-item-qty').value) || 0;
+        
+        if (item.cat === 'Consumibles') {
+            const m = parseFloat(document.getElementById('edit-item-meters').value) || 0;
+            item.meters = m;
+            item.totalMeters = m > 0 ? (item.qty * m) : 0;
+        } else {
+            item.meters = 0;
+            item.totalMeters = 0;
+        }
+
         if (item.qty > 0 && item.status.includes('Agotado')) item.status = 'Activo';
         if (item.qty === 0 && item.cat === 'Consumibles') item.status = 'Agotado (0 en Stock)';
 
         document.getElementById('edit-modal').classList.add('hidden'); 
         if (item.cat === 'Consumibles' && item.qty <= 5) {
-            window.showToast(`¡Alerta de Stock! Quedan solo ${item.qty} unidades de "${item.name}".`, 'warning');
-            notifyUnitManagers(item.unit, `ALERTA DE STOCK BAJO: El consumible "${item.name}" (${item.id}) quedó con ${item.qty} unidades.`);
+            window.showToast(`¡Alerta de Stock! Quedan solo ${item.qty} unidades/carretes de "${item.name}".`, 'warning');
+            notifyUnitManagers(item.unit, `ALERTA DE STOCK BAJO: El consumible "${item.name}" (${item.id}) quedó con ${item.qty} unidades/carretes.`);
         } else {
             window.showToast("Bien modificado correctamente.");
         }
-        logAudit("Edición Inventario", `Editó el bien ${item.id} (Stock: ${item.qty})`); 
+        logAudit("Edición Inventario", `Editó el bien ${item.id} (Stock: ${item.qty}${item.meters > 0 ? ', Metros: ' + item.totalMeters + 'm' : ''})`); 
         renderTable(); 
         document.dispatchEvent(new Event('inventoryUpdated')); 
     };
@@ -159,11 +239,37 @@ export function initInventario() {
         document.dispatchEvent(new Event('inventoryUpdated'));
     };
 
-    // FORMULARIO DE DONACIONES INTERNAS DE CONSUMIBLES (DESCUENTA EN ORIGEN Y AGREGA EN DESTINO)
+    // Selector dinámico en Donaciones cuando el consumible tiene metros
+    const donItemSelect = document.getElementById('donation-item-select');
+    const donMeasureGroup = document.getElementById('donation-measure-group');
+    const donMeasureMode = document.getElementById('donation-measure-mode');
+    const donQtyLabel = document.getElementById('donation-qty-label');
+
+    const updateDonationMeasureVisibility = () => {
+        if (!donItemSelect || !donMeasureGroup) return;
+        const selectedItem = db.inventory.find(i => i.id === donItemSelect.value);
+        if (selectedItem && (selectedItem.meters || 0) > 0) {
+            donMeasureGroup.classList.remove('hidden');
+            if (donMeasureMode.value === 'metros') {
+                donQtyLabel.textContent = `Metros a Entregar (Disp: ${selectedItem.totalMeters ?? (selectedItem.qty * selectedItem.meters)}m)`;
+            } else {
+                donQtyLabel.textContent = `Carretes a Entregar (${selectedItem.meters}m c/u - Disp: ${selectedItem.qty})`;
+            }
+        } else {
+            donMeasureGroup.classList.add('hidden');
+            if (donMeasureMode) donMeasureMode.value = 'unidades';
+            if (donQtyLabel) donQtyLabel.textContent = 'Cantidad a Entregar';
+        }
+    };
+
+    if (donItemSelect) donItemSelect.addEventListener('change', updateDonationMeasureVisibility);
+    if (donMeasureMode) donMeasureMode.addEventListener('change', updateDonationMeasureVisibility);
+
+    // FORMULARIO DE DONACIONES INTERNAS DE CONSUMIBLES
     document.getElementById('donation-form').onsubmit = (e) => {
         e.preventDefault();
         const itemId = document.getElementById('donation-item-select').value;
-        const donateQty = parseInt(document.getElementById('donation-qty').value) || 0;
+        const donateQty = parseFloat(document.getElementById('donation-qty').value) || 0;
         const targetUnitVal = document.getElementById('donation-unit-select').value;
         const receiverVal = document.getElementById('donation-receiver').value.trim();
         const justification = document.getElementById('donation-justification').value.trim();
@@ -175,16 +281,30 @@ export function initInventario() {
         const item = db.inventory.find(i => i.id === itemId);
         if (!item) return window.showToast("Seleccione un consumible válido.", "error");
 
+        const hasMeters = (item.meters || 0) > 0;
+        const mode = (hasMeters && donMeasureMode) ? donMeasureMode.value : 'unidades';
         const currentStock = item.qty ?? 1;
-        if (donateQty <= 0 || donateQty > currentStock) {
-            return window.showToast(`Cantidad inválida. Stock actual disponible: ${currentStock} unidades.`, "error");
+        const currentTotalMeters = item.totalMeters ?? (currentStock * (item.meters || 0));
+
+        if (mode === 'metros') {
+            if (donateQty <= 0 || donateQty > currentTotalMeters) {
+                return window.showToast(`Metraje inválido. Disponible actualmente: ${currentTotalMeters} metros.`, "error");
+            }
+            item.totalMeters = currentTotalMeters - donateQty;
+            item.qty = item.totalMeters > 0 ? Math.ceil(item.totalMeters / item.meters) : 0;
+        } else {
+            if (donateQty <= 0 || donateQty > currentStock) {
+                return window.showToast(`Cantidad inválida. Stock actual disponible: ${currentStock} unidades/carretes.`, "error");
+            }
+            item.qty = currentStock - donateQty;
+            if (hasMeters) {
+                item.totalMeters = Math.max(0, currentTotalMeters - (donateQty * item.meters));
+            }
         }
 
-        const targetUnit = targetUnitVal.includes('|') ? targetUnitVal.split('|')[1] : targetUnitVal;
-        
-        // 1. Descontar del inventario origen
-        item.qty = currentStock - donateQty;
         if (item.qty === 0) item.status = 'Agotado (0 en Stock)';
+
+        const targetUnit = targetUnitVal.includes('|') ? targetUnitVal.split('|')[1] : targetUnitVal;
 
         const emailMatch = receiverVal.match(/\(([^)]+)\)/);
         let receiverEmail = emailMatch ? emailMatch[1] : '';
@@ -198,8 +318,10 @@ export function initInventario() {
             }
         }
 
-        // 2. Agregar o sumar al inventario de la unidad/usuario destino para que aparezca en Inventario Global y Mis Bienes
-        const targetItem = receiveDonatedConsumable(item, donateQty, targetUnit, receiverName, receiverEmail, justification);
+        const targetItem = receiveDonatedConsumable(item, donateQty, targetUnit, receiverName, receiverEmail, justification, mode);
+        const qtyLabelDisplay = mode === 'metros' 
+            ? `${donateQty}m` 
+            : (hasMeters ? `${donateQty} carrete(s) (${donateQty * item.meters}m)` : `${donateQty} unid.`);
 
         const donationRecord = {
             id: 'DON-' + Math.floor(Math.random() * 9000 + 1000),
@@ -207,7 +329,7 @@ export function initInventario() {
             itemId: item.id,
             targetItemId: targetItem.id,
             itemName: item.name,
-            qty: donateQty,
+            qty: qtyLabelDisplay,
             fromUnit: item.unit,
             toUnit: targetUnit,
             receiver: receiverName || `Stock ${targetUnit}`,
@@ -216,22 +338,23 @@ export function initInventario() {
         };
 
         db.donations.unshift(donationRecord);
-        addHistory("Donación Consumible", `Se donaron ${donateQty} unid. de ${item.name} (${item.unit} -> ${targetUnit}, Receptor: ${receiverName}). Justificación: ${justification}`);
-        logAudit("Donación Interna", `Donó ${donateQty} de ${item.id} a ${targetUnit} (Nuevo/Dest ID: ${targetItem.id}). Stock origen: ${item.qty}`);
+        addHistory("Donación Consumible", `Se donaron ${qtyLabelDisplay} de ${item.name} (${item.unit} -> ${targetUnit}, Receptor: ${receiverName}). Justificación: ${justification}`);
+        logAudit("Donación Interna", `Donó ${qtyLabelDisplay} de ${item.id} a ${targetUnit} (ID Destino: ${targetItem.id}). Stock origen: ${item.qty}`);
 
         if (receiverEmail) {
-            addNotification(receiverEmail, `Has recibido una donación de ${donateQty} unid. de "${item.name}" en tu unidad (${targetUnit}) enviada por ${item.unit}. Ya figura en tu inventario.`);
+            addNotification(receiverEmail, `Has recibido una donación de ${qtyLabelDisplay} de "${item.name}" en tu unidad (${targetUnit}) enviada por ${item.unit}. Ya figura en tu inventario.`);
         }
 
         if (item.qty <= 5) {
-            window.showToast(`¡Donación transferida a ${targetUnit}! ALERTA: Quedan solo ${item.qty} unid. en ${item.unit}.`, "warning");
-            notifyUnitManagers(item.unit, `ALERTA DE STOCK BAJO: Tras donación a ${targetUnit}, quedan solo ${item.qty} unidades de "${item.name}".`);
+            window.showToast(`¡Donación transferida a ${targetUnit}! ALERTA: Quedan solo ${item.qty} unid./carretes en ${item.unit}.`, "warning");
+            notifyUnitManagers(item.unit, `ALERTA DE STOCK BAJO: Tras donación a ${targetUnit}, quedan solo ${item.qty} unidades/carretes de "${item.name}".`);
         } else {
             window.showToast(`Donación procesada: descontada de ${item.unit} y agregada al inventario de ${targetUnit}.`);
         }
 
         e.target.reset();
         document.getElementById('donation-qty').value = 1;
+        if (donMeasureGroup) donMeasureGroup.classList.add('hidden');
         renderTable();
         updateDonationSelects();
         renderDonationsTable();
@@ -246,7 +369,7 @@ export function initInventario() {
             doc.text(`Reporte de Donaciones Internas de Consumibles - CENDIT`, 14, 15);
             doc.setFontSize(10); doc.text(`Generado por: ${state.currentUser.name}`, 14, 22);
             const tableData = db.donations.map(d => [d.date, `${d.itemName} (${d.itemId})`, d.qty, `${d.fromUnit} -> ${d.toUnit}`, d.receiver, d.justification]);
-            doc.autoTable({ startY: 28, head: [['Fecha', 'Consumible', 'Cant.', 'Origen -> Destino', 'Receptor', 'Justificación']], body: tableData, theme: 'grid', styles: { fontSize: 8 }});
+            doc.autoTable({ startY: 28, head: [['Fecha', 'Consumible', 'Cant. / Metros', 'Origen -> Destino', 'Receptor', 'Justificación']], body: tableData, theme: 'grid', styles: { fontSize: 8 }});
             doc.save(`Donaciones_Consumibles_CENDIT.pdf`);
             window.showToast("PDF de Donaciones exportado.");
         };
@@ -322,7 +445,10 @@ export function initInventario() {
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
         doc.text(`Mis Bienes Asignados - CENDIT`, 14, 15); doc.setFontSize(10); doc.text(`Usuario: ${state.currentUser.name}`, 14, 22);
         const myItems = db.inventory.filter(i => i.assignedEmail === state.currentUser.email || i.pendingEmail === state.currentUser.email);
-        const tableData = myItems.map(i => [i.id, `${i.name} (Cant: ${i.qty ?? 1})`, i.cat, i.status]);
+        const tableData = myItems.map(i => {
+            const qtyInfo = (i.meters || 0) > 0 ? `${i.qty ?? 1} carrete(s) (${i.totalMeters ?? (i.qty * i.meters)}m)` : `Cant: ${i.qty ?? 1}`;
+            return [i.id, `${i.name} (${qtyInfo})`, i.cat, i.status];
+        });
         doc.autoTable({ startY: 30, head: [['ID', 'Nombre / Cantidad', 'Categoría', 'Estado']], body: tableData, theme: 'grid', styles: { fontSize: 8 }});
         doc.save(`MisBienes_${state.currentUser.name.replace(' ', '')}.pdf`); window.showToast("PDF Exportado.");
     };
@@ -356,7 +482,10 @@ export function updateDonationSelects() {
         (state.currentUser?.role === 'ADMIN' || i.unit === state.currentUser?.unit || misUnidades.includes(i.unit))
     );
     consumables.forEach(c => {
-        itemSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.unit}) - Disp: ${c.qty} unid.</option>`;
+        const stockText = (c.meters || 0) > 0 
+            ? `Disp: ${c.qty} carrete(s) de ${c.meters}m (Total: ${c.totalMeters ?? (c.qty * c.meters)}m)` 
+            : `Disp: ${c.qty} unid.`;
+        itemSelect.innerHTML += `<option value="${c.id}">${c.name} (${c.unit}) - ${stockText}</option>`;
     });
 
     unitSelect.innerHTML = '<option value="" disabled selected>Seleccione unidad destino...</option>';
@@ -375,11 +504,12 @@ export function renderDonationsTable() {
         return;
     }
     db.donations.forEach(d => {
+        const displayQty = String(d.qty).includes('m') || String(d.qty).includes('unid') || String(d.qty).includes('carrete') ? d.qty : `${d.qty} unid.`;
         tbody.innerHTML += `
             <tr>
                 <td>${d.date}</td>
                 <td><strong>${d.itemName}</strong> <small style="color:var(--text-secondary);">(${d.itemId})</small></td>
-                <td><span class="ok-stock-badge">${d.qty} unid.</span></td>
+                <td><span class="ok-stock-badge">${displayQty}</span></td>
                 <td><strong>${d.fromUnit}</strong> <i class="fas fa-arrow-right" style="color:var(--accent);"></i> <strong>${d.toUnit}</strong></td>
                 <td>${d.receiver}</td>
                 <td>${d.justification}</td>
@@ -401,6 +531,8 @@ export function renderTable() {
         const realIndex = db.inventory.findIndex(i => i.id === item.id);
         const tr = document.createElement('tr');
         const qty = item.qty ?? 1;
+        const hasMeters = (item.meters || 0) > 0;
+        const totalM = item.totalMeters ?? (qty * (item.meters || 0));
         const isConsumible = item.cat === 'Consumibles';
         const isLowStock = isConsumible && qty <= 5;
 
@@ -444,9 +576,12 @@ export function renderTable() {
 
         let stockOrAssigned = '';
         if (isConsumible) {
+            const stockDetailText = hasMeters 
+                ? `${qty} carrete(s) de ${item.meters}m (Total: ${totalM}m)` 
+                : `${qty} unid.`;
             const badgeHtml = isLowStock 
-                ? `<span class="low-stock-badge"><i class="fas fa-exclamation-triangle"></i> ¡Stock Bajo: ${qty} unid.!</span>`
-                : `<span class="ok-stock-badge"><i class="fas fa-boxes"></i> Stock: ${qty} unid.</span>`;
+                ? `<span class="low-stock-badge"><i class="fas fa-exclamation-triangle"></i> ¡Stock Bajo: ${stockDetailText}!</span>`
+                : `<span class="ok-stock-badge"><i class="fas fa-boxes"></i> Stock: ${stockDetailText}</span>`;
             stockOrAssigned = `${badgeHtml}${assignedPersonHtml}`;
         } else {
             stockOrAssigned = item.pendingAction 
@@ -484,14 +619,18 @@ export function renderMisBienesTable() {
 
     myItems.forEach(item => {
         const realIndex = db.inventory.findIndex(i => i.id === item.id); const tr = document.createElement('tr');
+        const hasMeters = (item.meters || 0) > 0;
+        const totalM = item.totalMeters ?? ((item.qty ?? 1) * (item.meters || 0));
+        const consDesc = hasMeters ? `${item.qty ?? 1} carrete(s) / ${totalM}m` : `Cant: ${item.qty ?? 1}`;
+
         let actionsHtml = `<div style="display:flex; gap:5px; flex-wrap:wrap;">`;
         if(item.pendingAction && item.pendingEmail === state.currentUser.email) { actionsHtml += `<button class="action-btn btn-success btn-receive" data-index="${realIndex}" style="padding: 6px 10px;"><i class="fas fa-check-double"></i> Recibir</button>`; }
         else {
             if(item.status.includes('Prestado') && item.assignedEmail === state.currentUser.email) { actionsHtml += `<button class="action-btn btn-warning btn-return" data-index="${realIndex}" style="padding: 6px 10px;"><i class="fas fa-undo"></i> Devolver Bien</button>`; }
-            else { actionsHtml += `<small style="color:var(--text-secondary);">${item.cat === 'Consumibles' ? `Disponible (${item.qty ?? 1} unid.)` : 'Asignado Fijo'}</small>`; }
+            else { actionsHtml += `<small style="color:var(--text-secondary);">${item.cat === 'Consumibles' ? `Disponible (${consDesc})` : 'Asignado Fijo'}</small>`; }
         }
         actionsHtml += `</div>`;
-        tr.innerHTML = `<td><strong>${item.id}</strong></td><td><strong>${item.name}</strong> ${item.cat === 'Consumibles' ? `<small style="color:var(--info);">(Cant: ${item.qty ?? 1})</small>` : ''}</td><td><span style="background:var(--accent); color:white; padding:4px 10px; border-radius:20px; font-size:0.8rem; display:inline-block;">${item.cat}</span></td><td><span style="color: ${item.status.includes('Pendiente') ? 'var(--warning)' : 'var(--success)'}; font-weight:bold;">${item.status}</span></td><td>${actionsHtml}</td>`;
+        tr.innerHTML = `<td><strong>${item.id}</strong></td><td><strong>${item.name}</strong> ${item.cat === 'Consumibles' ? `<small style="color:var(--info);">(${consDesc})</small>` : ''}</td><td><span style="background:var(--accent); color:white; padding:4px 10px; border-radius:20px; font-size:0.8rem; display:inline-block;">${item.cat}</span></td><td><span style="color: ${item.status.includes('Pendiente') ? 'var(--warning)' : 'var(--success)'}; font-weight:bold;">${item.status}</span></td><td>${actionsHtml}</td>`;
         tr.onclick = (e) => { if(!e.target.closest('button')) openDetailsModal(item); }; tbody.appendChild(tr);
     });
     attachTableEvents(); 
@@ -501,7 +640,11 @@ function openDetailsModal(item) {
     document.getElementById('detail-id').textContent = item.id; 
     document.getElementById('detail-name').textContent = item.name; 
     document.getElementById('detail-cat').textContent = item.cat; 
-    document.getElementById('detail-qty').textContent = `${item.qty ?? 1} unidad(es)`;
+    const hasMeters = (item.meters || 0) > 0;
+    const totalM = item.totalMeters ?? ((item.qty ?? 1) * (item.meters || 0));
+    document.getElementById('detail-qty').textContent = hasMeters 
+        ? `${item.qty ?? 1} carrete(s) de ${item.meters}m (Total: ${totalM} metros)` 
+        : `${item.qty ?? 1} unidad(es)`;
     document.getElementById('detail-unit').textContent = item.unit; 
     document.getElementById('detail-assigned').textContent = item.assignedTo || 'Stock de Unidad'; 
     document.getElementById('detail-status').textContent = item.status; 
@@ -580,6 +723,7 @@ function attachTableEvents() {
         updateDonationSelects();
         const itemSelect = document.getElementById('donation-item-select');
         itemSelect.value = itemId;
+        itemSelect.dispatchEvent(new Event('change'));
         if(window.syncAllSelects) window.syncAllSelects();
     });
 
@@ -590,6 +734,17 @@ function attachTableEvents() {
         document.getElementById('edit-item-name').value = item.name; 
         document.getElementById('edit-item-category').value = item.cat; 
         document.getElementById('edit-item-qty').value = item.qty ?? 1;
+        
+        const editMetersGroup = document.getElementById('edit-item-meters-group');
+        const editMetersInput = document.getElementById('edit-item-meters');
+        if (item.cat === 'Consumibles') {
+            editMetersGroup.classList.remove('hidden');
+            editMetersInput.value = item.meters || '';
+        } else {
+            editMetersGroup.classList.add('hidden');
+            editMetersInput.value = '';
+        }
+
         if(window.syncAllSelects) window.syncAllSelects(); 
         document.getElementById('edit-modal').classList.remove('hidden'); 
     });

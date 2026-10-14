@@ -143,7 +143,7 @@
                 <div id="add-item-form" class="glass-card hidden mb-4">
                     <form id="inventory-form">
                         <div class="form-row">
-                            <div class="form-group"><label class="input-label">Nombre del Bien / Consumible</label><input type="text" id="item-name" class="form-control" required></div>
+                            <div class="form-group"><label class="input-label">Nombre del Bien / Consumible</label><input type="text" id="item-name" class="form-control" placeholder="Ej. Fibra Óptica / Cable UTP / Router" required></div>
                             <div class="form-group"><label class="input-label">Categoría</label>
                                 <select id="item-category" class="form-control custom-select" required>
                                     <option value="" disabled selected>Seleccione...</option>
@@ -153,7 +153,15 @@
                                     <option value="Consumibles">Consumibles</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label class="input-label">Cantidad / Stock Inicial</label><input type="number" id="item-qty" class="form-control" min="1" value="1" required></div>
+                            <div class="form-group"><label class="input-label" id="item-qty-label">Cantidad / Stock Inicial</label><input type="number" id="item-qty" class="form-control" min="1" value="1" required></div>
+                            <!-- CAMPO DINÁMICO DE METROS PARA CONSUMIBLES (FIBRA / CABLE UTP) -->
+                            <div class="form-group hidden" id="item-meters-group">
+                                <label class="input-label"><i class="fas fa-ruler-horizontal" style="color: var(--accent);"></i> Metros por Carrete / Unidad (Opcional)</label>
+                                <input type="number" id="item-meters" class="form-control" min="0" step="0.5" placeholder="Ej. 100 (Dejar vacío si no aplica)">
+                                <small id="item-meters-preview" style="display: block; margin-top: 5px; color: var(--info); font-weight: 600; font-size: 0.78rem;">
+                                    Si es cable o fibra, indique cuántos metros trae cada carrete/unidad.
+                                </small>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group w-100">
@@ -199,9 +207,16 @@
                                 <label class="input-label">Consumible a Donar (Stock Disponible)</label>
                                 <select id="donation-item-select" class="form-control custom-select" required></select>
                             </div>
+                            <div class="form-group hidden" id="donation-measure-group">
+                                <label class="input-label">Modo de Entrega (Cable / Fibra)</label>
+                                <select id="donation-measure-mode" class="form-control custom-select">
+                                    <option value="unidades" selected>Por Carretes / Unidades</option>
+                                    <option value="metros">Por Metros (m)</option>
+                                </select>
+                            </div>
                             <div class="form-group">
-                                <label class="input-label">Cantidad a Entregar</label>
-                                <input type="number" id="donation-qty" class="form-control" min="1" value="1" required>
+                                <label class="input-label" id="donation-qty-label">Cantidad a Entregar</label>
+                                <input type="number" id="donation-qty" class="form-control" min="1" step="any" value="1" required>
                             </div>
                         </div>
                         <div class="form-row">
@@ -233,7 +248,7 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>Consumible</th>
-                                <th>Cant.</th>
+                                <th>Cant. / Metros</th>
                                 <th>Origen -> Destino</th>
                                 <th>Receptor</th>
                                 <th>Justificación</th>
@@ -255,7 +270,7 @@
                     </div>
                 </header>
 
-                <!-- PANEL EXCLUSIVO DE TASAS OFICIALES BCV (SIN AJUSTE MANUAL NI PARALELO) -->
+                <!-- PANEL EXCLUSIVO DE TASAS OFICIALES BCV -->
                 <div class="bcv-rates-grid mb-4">
                     <div class="glass-card bcv-rate-card bcv-usd">
                         <div class="bcv-card-icon"><i class="fas fa-university"></i></div>
@@ -509,7 +524,7 @@
                         <input type="date" id="chat-action-return-date" class="form-control">
                     </div>
                     <div class="form-group hidden" id="chat-action-qty-group">
-                        <label class="input-label">Cantidad de Consumible a Donar</label>
+                        <label class="input-label">Cantidad de Consumible a Donar (Unidades / Carretes)</label>
                         <input type="number" id="chat-action-donate-qty" class="form-control" min="1" value="1">
                     </div>
                 </div>
@@ -523,7 +538,7 @@
 
     <div id="complete-req-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-clipboard-check"></i> Registrar Compra</h2><form id="complete-req-form"><input type="hidden" id="comp-req-id"><div class="form-group"><label class="input-label">Nombre del Bien</label><input type="text" id="comp-req-name" class="form-control" required></div><div class="form-row"><div class="form-group"><label class="input-label"><i class="fas fa-camera"></i> Foto</label><label for="comp-req-photo" class="form-control file-upload-label"><i class="fas fa-upload"></i> <span id="comp-req-photo-name">Imagen</span></label><input type="file" id="comp-req-photo" accept="image/*" style="display:none;" required></div><div class="form-group"><label class="input-label"><i class="fas fa-file-invoice"></i> Factura</label><label for="comp-req-invoice" class="form-control file-upload-label"><i class="fas fa-upload"></i> <span id="comp-req-invoice-name">Archivo</span></label><input type="file" id="comp-req-invoice" accept="image/*,.pdf" style="display:none;" required></div></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('complete-req-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn" id="btn-save-req-item"><i class="fas fa-save"></i> Guardar</button></div></form></div></div>
 
-    <div id="item-details-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"><i class="fas fa-box-open"></i></div><h2 id="detail-name" style="margin-bottom: 5px;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 20px;"><strong>ID:</strong> <span id="detail-id"></span></p><div id="detail-images" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div><div style="text-align: left; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><p><strong>Categoría:</strong> <span id="detail-cat"></span></p><p><strong>Stock / Cant.:</strong> <span id="detail-qty"></span></p><p><strong>Unidad:</strong> <span id="detail-unit"></span></p><p><strong>Responsable:</strong> <span id="detail-assigned"></span></p><p><strong>Estado:</strong> <span id="detail-status" style="color: var(--success);"></span></p><p><strong>Obs:</strong> <span id="detail-obs" style="color: var(--warning);"></span></p></div><button class="action-btn btn-danger w-100 justify-center" onclick="document.getElementById('item-details-modal').classList.add('hidden')">Cerrar</button></div></div>
+    <div id="item-details-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"><i class="fas fa-box-open"></i></div><h2 id="detail-name" style="margin-bottom: 5px;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 20px;"><strong>ID:</strong> <span id="detail-id"></span></p><div id="detail-images" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div><div style="text-align: left; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><p><strong>Categoría:</strong> <span id="detail-cat"></span></p><p><strong>Stock / Metraje:</strong> <span id="detail-qty"></span></p><p><strong>Unidad:</strong> <span id="detail-unit"></span></p><p><strong>Responsable:</strong> <span id="detail-assigned"></span></p><p><strong>Estado:</strong> <span id="detail-status" style="color: var(--success);"></span></p><p><strong>Obs:</strong> <span id="detail-obs" style="color: var(--warning);"></span></p></div><button class="action-btn btn-danger w-100 justify-center" onclick="document.getElementById('item-details-modal').classList.add('hidden')">Cerrar</button></div></div>
 
     <div id="edit-modal" class="modal-overlay hidden">
         <div class="glass-card modal-content">
@@ -539,7 +554,11 @@
                         <option value="Consumibles">Consumibles</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="input-label">Cantidad / Stock Disponible</label><input type="number" id="edit-item-qty" class="form-control" min="0" required></div>
+                <div class="form-group"><label class="input-label">Cantidad / Carretes Disponibles</label><input type="number" id="edit-item-qty" class="form-control" min="0" required></div>
+                <div class="form-group hidden" id="edit-item-meters-group">
+                    <label class="input-label"><i class="fas fa-ruler-horizontal" style="color: var(--accent);"></i> Metros por Carrete / Unidad (Opcional)</label>
+                    <input type="number" id="edit-item-meters" class="form-control" min="0" step="0.5" placeholder="Ej. 100 (0 si no aplica)">
+                </div>
                 <div class="form-row mt-4" style="justify-content:flex-end;">
                     <button type="button" class="action-btn btn-danger" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancelar</button>
                     <button type="submit" class="submit-btn">Guardar</button>
