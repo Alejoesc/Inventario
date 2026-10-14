@@ -14,6 +14,15 @@
     <div id="toast-container"></div>
     <button id="theme-toggle" class="theme-bubble"><i class="fas fa-sun"></i></button>
 
+    <!-- PANEL DE NOTIFICACIONES EN LA RAÍZ PARA ESTAR SIEMPRE AL FRENTE -->
+    <div id="notif-panel" class="notif-panel glass-card hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 10px;">
+            <h4 style="margin: 0; font-size: 0.95rem;"><i class="fas fa-bell" style="color: var(--accent); margin-right: 6px;"></i>Notificaciones</h4>
+            <button id="close-notif-btn" style="background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1rem;"><i class="fas fa-times"></i></button>
+        </div>
+        <ul id="notif-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+    </div>
+
     <!-- PANTALLA DE LOGIN -->
     <div id="login-view" class="login-container active">
         <div class="glass-card login-box">
@@ -38,23 +47,17 @@
             <div class="top-sidebar">
                 <div class="brand-container" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                     <div class="brand" style="display: flex; align-items: center; gap: 10px; margin: 0;"><i class="fas fa-boxes"></i> <h2>CENDIT</h2></div>
-                    <div class="notification-wrapper" style="position: relative;">
-                        <button id="bell-btn" class="bell-btn" style="background: transparent; border: none; color: var(--text-primary); font-size: 1.2rem; cursor: pointer; position: relative;">
+                    <div class="notification-wrapper">
+                        <button id="bell-btn" class="bell-btn" title="Ver Notificaciones">
                             <i class="fas fa-bell"></i><span id="notif-badge" class="badge">0</span>
                         </button>
-                        <div id="notif-panel" class="notif-panel glass-card hidden">
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 10px;">
-                                <h4 style="margin: 0;">Notificaciones</h4>
-                                <button id="close-notif-btn" style="background: transparent; border: none; color: var(--danger); cursor: pointer;"><i class="fas fa-times"></i></button>
-                            </div>
-                            <ul id="notif-list" style="list-style: none; padding: 0; margin: 0;"></ul>
-                        </div>
                     </div>
                 </div>
                 <nav id="main-nav">
                     <button class="nav-btn active" data-target="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
                     <button class="nav-btn" data-target="my-items-module"><i class="fas fa-laptop-house"></i> Mis Bienes</button>
                     <button class="nav-btn" data-target="inventory"><i class="fas fa-box-open"></i> Inventario Global</button>
+                    <button class="nav-btn" data-target="donations-module"><i class="fas fa-hand-holding-heart"></i> Donaciones Internas</button>
                     <button class="nav-btn" data-target="requisitions-module"><i class="fas fa-file-signature"></i> Requisiciones</button>
                     <button class="nav-btn" data-target="loans-module"><i class="fas fa-exchange-alt"></i> Control de Préstamos</button>
                     <button class="nav-btn" data-target="org-structure"><i class="fas fa-sitemap"></i> Estructura</button>
@@ -79,7 +82,7 @@
             <section id="dashboard" class="view-section active">
                 <header class="glass-header">
                     <h1>Dashboard</h1>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div class="header-actions">
                         <div class="chart-tabs">
                             <button class="chart-tab active" data-type="doughnut"><i class="fas fa-chart-pie"></i> Torta</button>
                             <button class="chart-tab" data-type="bar"><i class="fas fa-chart-bar"></i> Barras</button>
@@ -129,30 +132,32 @@
             <section id="inventory" class="view-section">
                 <header class="glass-header">
                     <h1>Inventario Global</h1>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-                        <div class="search-wrapper" style="flex: 1; min-width: 160px;">
+                    <div class="header-actions">
+                        <div class="search-wrapper">
                             <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                            <input type="text" id="search-inventory" class="form-control" placeholder="Buscar..." style="padding-left: 40px; width: 100%;">
+                            <input type="text" id="search-inventory" class="form-control" placeholder="Buscar en inventario..." style="padding-left: 40px;">
                         </div>
-                        <button id="btn-add-item" class="action-btn role-admin-sup-enc hidden"><i class="fas fa-plus"></i> Ingresar</button>
+                        <button id="btn-add-item" class="action-btn role-admin-sup-enc hidden"><i class="fas fa-plus"></i> Ingresar Bien</button>
                     </div>
                 </header>
                 <div id="add-item-form" class="glass-card hidden mb-4">
                     <form id="inventory-form">
                         <div class="form-row">
-                            <div class="form-group"><label class="input-label">Nombre del Bien</label><input type="text" id="item-name" class="form-control" required></div>
+                            <div class="form-group"><label class="input-label">Nombre del Bien / Consumible</label><input type="text" id="item-name" class="form-control" required></div>
                             <div class="form-group"><label class="input-label">Categoría</label>
                                 <select id="item-category" class="form-control custom-select" required>
                                     <option value="" disabled selected>Seleccione...</option>
                                     <option value="Equipos IT">Equipos IT</option>
                                     <option value="Mobiliario">Mobiliario</option>
                                     <option value="Herramientas">Herramientas</option>
+                                    <option value="Consumibles">Consumibles</option>
                                 </select>
                             </div>
+                            <div class="form-group"><label class="input-label">Cantidad / Stock Inicial</label><input type="number" id="item-qty" class="form-control" min="1" value="1" required></div>
                         </div>
                         <div class="form-row">
                             <div class="form-group w-100">
-                                <label class="input-label">Asignar a Empleado (Dejar blanco para Unidad)</label>
+                                <label class="input-label">Asignar a Empleado (Dejar blanco para Stock de la Unidad)</label>
                                 <div class="custom-autocomplete">
                                     <input type="text" id="item-assigned" class="form-control" placeholder="Escribe iniciales..." autocomplete="off">
                                     <ul id="item-assigned-list" class="autocomplete-list hidden"></ul>
@@ -162,31 +167,178 @@
                         <button type="submit" class="submit-btn mt-2">Guardar Bien</button>
                     </form>
                 </div>
-                <div class="glass-card table-container"><table id="inventory-table" class="hover-table"><thead><tr><th>ID</th><th>Bien</th><th>Asignado A</th><th>Unidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+                <div class="glass-card table-container">
+                    <table id="inventory-table" class="hover-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Bien / Categoría</th>
+                                <th>Stock / Asignación</th>
+                                <th>Unidad</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </section>
 
-            <!-- REQUISICIONES -->
+            <!-- DONACIONES INTERNAS DE CONSUMIBLES -->
+            <section id="donations-module" class="view-section">
+                <header class="glass-header">
+                    <h1><i class="fas fa-hand-holding-heart"></i> Donaciones Internas (Consumibles)</h1>
+                    <button id="btn-export-donations" class="action-btn"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                </header>
+                <div class="glass-card mb-4">
+                    <h3 style="margin-bottom: 15px; color: var(--accent);"><i class="fas fa-box-tissue"></i> Registrar Donación de Consumible entre Unidades</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">Los artículos consumibles donados se descuentan del inventario de la unidad de origen y se incorporan automáticamente al inventario de la unidad/usuario receptor.</p>
+                    <form id="donation-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="input-label">Consumible a Donar (Stock Disponible)</label>
+                                <select id="donation-item-select" class="form-control custom-select" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Cantidad a Entregar</label>
+                                <input type="number" id="donation-qty" class="form-control" min="1" value="1" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="input-label">Unidad Beneficiaria (Destino)</label>
+                                <select id="donation-unit-select" class="form-control custom-select" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Recibido por (Empleado receptor)</label>
+                                <div class="custom-autocomplete">
+                                    <input type="text" id="donation-receiver" class="form-control" placeholder="Escribe nombre del receptor..." autocomplete="off" required>
+                                    <ul id="donation-receiver-list" class="autocomplete-list hidden"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group w-100">
+                                <label class="input-label">Justificación de la Donación (Obligatorio)</label>
+                                <input type="text" id="donation-justification" class="form-control" placeholder="Ej. Material requerido para operatividad de red en laboratorio..." required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Procesar Donación y Transferir Stock</button>
+                    </form>
+                </div>
+                <div class="glass-card table-container">
+                    <h3 style="margin-bottom: 12px;"><i class="fas fa-list-alt"></i> Histórico de Donaciones Realizadas</h3>
+                    <table id="donations-table" class="hover-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Consumible</th>
+                                <th>Cant.</th>
+                                <th>Origen -> Destino</th>
+                                <th>Receptor</th>
+                                <th>Justificación</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- REQUISICIONES CON MONITOR AUTOMÁTICO DE TASAS OFICIALES BCV -->
             <section id="requisitions-module" class="view-section">
-                <header class="glass-header"><h1>Requisiciones y Compras</h1></header>
+                <header class="glass-header">
+                    <h1>Requisiciones y Compras</h1>
+                    <div class="header-actions">
+                        <span id="bcv-last-update" style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(0,0,0,0.2); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                            <i class="fas fa-sync-alt fa-spin" style="color: var(--accent);"></i> Sincronizando BCV automáticamente...
+                        </span>
+                    </div>
+                </header>
+
+                <!-- PANEL EXCLUSIVO DE TASAS OFICIALES BCV (SIN AJUSTE MANUAL NI PARALELO) -->
+                <div class="bcv-rates-grid mb-4">
+                    <div class="glass-card bcv-rate-card bcv-usd">
+                        <div class="bcv-card-icon"><i class="fas fa-university"></i></div>
+                        <div class="bcv-card-info">
+                            <span class="bcv-label">DÓLAR OFICIAL (BCV)</span>
+                            <h2 id="rate-bcv-usd">Bs. --</h2>
+                            <small id="rate-bcv-usd-sub">Tasa Oficial Banco Central de Venezuela</small>
+                        </div>
+                    </div>
+                    <div class="glass-card bcv-rate-card bcv-eur">
+                        <div class="bcv-card-icon"><i class="fas fa-euro-sign"></i></div>
+                        <div class="bcv-card-info">
+                            <span class="bcv-label">EURO OFICIAL (BCV)</span>
+                            <h2 id="rate-bcv-eur">Bs. --</h2>
+                            <small id="rate-bcv-eur-sub">Tasa Oficial Euro BCV</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="glass-card mb-4">
                     <h3 style="margin-bottom: 20px;"><i class="fas fa-cart-plus"></i> Solicitar Compra de Bien Faltante</h3>
                     <form id="req-form">
                         <div class="form-row">
-                            <div class="form-group"><label class="input-label">Nombre del Artículo</label><input type="text" id="req-item-name" class="form-control" required></div>
-                            <div class="form-group"><label class="input-label">Link de Referencia (URL)</label><input type="url" id="req-item-link" class="form-control" placeholder="https://..." required></div>
+                            <div class="form-group">
+                                <label class="input-label">Nombre del Artículo</label>
+                                <input type="text" id="req-item-name" class="form-control" placeholder="Ej. Switch Gigabit 24 Puertos" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Moneda de Cotización (Oficial BCV)</label>
+                                <select id="req-item-currency" class="form-control custom-select" required>
+                                    <option value="USD_BCV" selected>Dólares ($ - Tasa Oficial BCV)</option>
+                                    <option value="EUR_BCV">Euros (€ - Tasa Oficial BCV)</option>
+                                    <option value="BS">Bolívares (Bs.)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Monto Estimado</label>
+                                <input type="number" id="req-item-amount" class="form-control" step="0.01" min="0" placeholder="Ej. 185.50" required>
+                                <small id="req-conversion-preview" style="display: block; margin-top: 6px; color: var(--success); font-weight: 600; font-size: 0.8rem;">
+                                    Equivalente: Bs. 0,00 | $0.00 BCV | €0.00 BCV
+                                </small>
+                            </div>
                         </div>
-                        <div class="form-row"><div class="form-group w-100"><label class="input-label">Justificación</label><input type="text" id="req-item-justification" class="form-control" required></div></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="input-label">Link de Referencia (URL)</label><input type="url" id="req-item-link" class="form-control" placeholder="https://..." required></div>
+                            <div class="form-group">
+                                <label class="input-label"><i class="fas fa-file-pdf"></i> Cotización en PDF</label>
+                                <label for="req-item-quote" class="form-control file-upload-label">
+                                    <i class="fas fa-upload"></i> <span id="req-item-quote-name">Adjuntar Cotización PDF</span>
+                                </label>
+                                <input type="file" id="req-item-quote" accept=".pdf,application/pdf" style="display:none;" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group w-100"><label class="input-label">Justificación</label><input type="text" id="req-item-justification" class="form-control" placeholder="Motivo de la solicitud..." required></div>
+                        </div>
                         <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Enviar a Supervisor</button>
                     </form>
                 </div>
-                <div class="glass-card table-container"><table id="requisitions-table"><thead><tr><th>Fecha</th><th>Solicitante</th><th>Artículo</th><th>Link</th><th>Justificación</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
+                <div class="glass-card table-container">
+                    <table id="requisitions-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Solicitante</th>
+                                <th>Artículo</th>
+                                <th>Monto / Conversión BCV</th>
+                                <th>Soporte (Link / PDF)</th>
+                                <th>Justificación</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- ESTRUCTURA -->
             <section id="org-structure" class="view-section">
                 <header class="glass-header"><h1>Estructura del Organigrama</h1></header>
                 <div class="cards-grid mb-4">
-                    <div class="glass-card"><h3><i class="fas fa-building"></i> Nueva Dirección</h3><div class="form-group mt-2"><input type="text" id="new-dir-name" class="form-control mt-2"></div><button id="add-dir-btn" class="action-btn w-100 justify-center">Crear Dirección</button></div>
+                    <div class="glass-card"><h3><i class="fas fa-building"></i> Nueva Dirección</h3><div class="form-group mt-2"><input type="text" id="new-dir-name" class="form-control mt-2" placeholder="Nombre Dirección"></div><button id="add-dir-btn" class="action-btn w-100 justify-center">Crear Dirección</button></div>
                     <div class="glass-card">
                         <h3><i class="fas fa-users"></i> Nueva Unidad</h3>
                         <div class="form-group mt-2"><input type="text" id="new-unit-name" class="form-control mb-2" placeholder="Nombre Unidad">
@@ -206,25 +358,47 @@
                     <div class="form-row">
                         <div class="form-group"><label class="input-label">Dirección</label><select id="chat-dir-select" class="form-control custom-select" required></select></div>
                         <div class="form-group"><label class="input-label">Unidad</label><select id="chat-unit-select" class="form-control custom-select" required></select></div>
-                        <div class="form-group"><label class="input-label">Mensaje / Bien</label><input type="text" id="chat-item-req" class="form-control" placeholder="Ej. Osciloscopio"></div>
+                        <div class="form-group"><label class="input-label">Mensaje / Bien o Consumible</label><input type="text" id="chat-item-req" class="form-control" placeholder="Ej. Osciloscopio o Conectores RJ45"></div>
                     </div>
                     <button id="send-loan-req" class="submit-btn mt-2">Enviar Solicitud</button>
                 </div>
                 <div class="chat-container glass-card"><div class="messages" id="chat-messages"></div></div>
             </section>
             
-            <!-- HISTÓRICO -->
-            <section id="history-module" class="view-section"><header class="glass-header"><h1>Histórico de Movimientos</h1></header><div class="glass-card table-container"><table id="history-table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalles</th></tr></thead><tbody></tbody></table></div></section>
+            <!-- HISTÓRICO DE MOVIMIENTOS Y DE ELIMINACIONES -->
+            <section id="history-module" class="view-section">
+                <header class="glass-header"><h1>Histórico de Movimientos y Bajas</h1></header>
+                <div class="glass-card table-container mb-4">
+                    <h3 style="color: var(--danger); margin-bottom: 12px;"><i class="fas fa-trash-restore"></i> Histórico de Eliminaciones / Bajas de Inventario</h3>
+                    <table id="deleted-items-table" class="hover-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha Baja</th>
+                                <th>Bien (ID)</th>
+                                <th>Unidad</th>
+                                <th>Solicitado Por</th>
+                                <th>Autorizado Por</th>
+                                <th>Justificación</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="glass-card table-container">
+                    <h3 style="color: var(--accent); margin-bottom: 12px;"><i class="fas fa-history"></i> Movimientos Generales</h3>
+                    <table id="history-table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalles</th></tr></thead><tbody></tbody></table>
+                </div>
+            </section>
             
             <!-- AUDITORÍA -->
             <section id="audit-module" class="view-section">
                 <header class="glass-header">
                     <h1><i class="fas fa-user-secret"></i> Auditoría</h1>
-                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                        <input type="date" id="audit-date-from" class="form-control" title="Desde" style="width: 120px;">
-                        <input type="date" id="audit-date-to" class="form-control" title="Hasta" style="width: 120px;">
-                        <button id="btn-filter-audit" class="action-btn btn-info"><i class="fas fa-filter"></i></button>
-                        <button id="btn-export-audit" class="action-btn"><i class="fas fa-file-pdf"></i></button>
+                    <div class="header-actions">
+                        <input type="date" id="audit-date-from" class="form-control" title="Desde" style="width: auto; min-width: 130px;">
+                        <input type="date" id="audit-date-to" class="form-control" title="Hasta" style="width: auto; min-width: 130px;">
+                        <button id="btn-filter-audit" class="action-btn btn-info"><i class="fas fa-filter"></i> Filtrar</button>
+                        <button id="btn-export-audit" class="action-btn"><i class="fas fa-file-pdf"></i> Exportar</button>
                     </div>
                 </header>
                 <div class="glass-card table-container"><table id="audit-table" class="hover-table"><thead><tr><th>Fecha / Hora</th><th>Usuario / Correo</th><th>Acción</th><th>IP / Red</th></tr></thead><tbody></tbody></table></div>
@@ -234,10 +408,10 @@
             <section id="users-module" class="view-section">
                 <header class="glass-header">
                     <h1>Gestión de Usuarios</h1>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 400px;">
-                        <div class="search-wrapper" style="flex: 1; min-width: 150px;">
+                    <div class="header-actions">
+                        <div class="search-wrapper">
                             <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                            <input type="text" id="search-user" class="form-control" placeholder="Buscar..." style="padding-left: 40px; width: 100%;">
+                            <input type="text" id="search-user" class="form-control" placeholder="Buscar usuario..." style="padding-left: 40px;">
                         </div>
                         <button id="btn-add-user" class="action-btn admin-only hidden"><i class="fas fa-user-plus"></i> Registrar</button>
                     </div>
@@ -268,21 +442,111 @@
     </div>
 
     <!-- ===================== MODALES GLOBALES ===================== -->
+
+    <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO CON CSS -->
+    <div id="custom-confirm-modal" class="modal-overlay hidden" style="z-index: 999999;">
+        <div class="glass-card modal-content" style="max-width: 400px; text-align: center;">
+            <div id="confirm-modal-icon" style="font-size: 3.2rem; color: var(--danger); margin-bottom: 12px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 id="confirm-modal-title" style="margin-bottom: 10px; color: var(--text-primary); font-size: 1.3rem;">Confirmar Acción</h2>
+            <p id="confirm-modal-msg" style="color: var(--text-secondary); margin-bottom: 22px; font-size: 0.95rem; line-height: 1.4;"></p>
+            <div class="form-row" style="justify-content: center; gap: 12px; margin-bottom: 0;">
+                <button type="button" id="confirm-modal-cancel" class="action-btn" style="background: rgba(255,255,255,0.15); color: var(--text-primary); flex: 1;">Cancelar</button>
+                <button type="button" id="confirm-modal-ok" class="action-btn btn-danger" style="flex: 1;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SOLICITUD DE ELIMINACIÓN CON JUSTIFICACIÓN OBLIGATORIA Y PERMISO DE SUPERVISOR -->
+    <div id="delete-item-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h2 style="color: var(--danger); margin-bottom: 15px;"><i class="fas fa-trash-alt"></i> Solicitar Eliminación de Bien</h2>
+            <p id="delete-item-info" style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;"></p>
+            <form id="delete-item-form">
+                <input type="hidden" id="delete-item-index">
+                <div class="form-group">
+                    <label class="input-label">Justificación de Eliminación / Desincorporación (Obligatorio)</label>
+                    <textarea id="delete-item-justification" class="form-control" rows="3" placeholder="Explique detalladamente el motivo de la baja (daño irreparable, obsolescencia, etc.)..." required></textarea>
+                </div>
+                <p style="color: var(--warning); font-size: 0.8rem; margin-bottom: 15px;"><i class="fas fa-shield-alt"></i> Esta solicitud notificará al Supervisor / Encargado de la unidad para autorizar la baja definitiva y quedará registrada en el Histórico de Eliminaciones.</p>
+                <div class="form-row mt-4" style="justify-content: flex-end; margin-bottom: 0;">
+                    <button type="button" class="action-btn" style="background: rgba(255,255,255,0.15); color: var(--text-primary);" onclick="document.getElementById('delete-item-modal').classList.add('hidden')">Cancelar</button>
+                    <button type="submit" class="action-btn btn-danger"><i class="fas fa-paper-plane"></i> Solicitar Permiso de Baja</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="transfer-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--warning); margin-bottom: 20px;"><i class="fas fa-exchange-alt"></i> Traspasar Bien</h2><form id="transfer-form"><input type="hidden" id="transfer-item-index"><div class="form-group"><label class="input-label">Nuevo Responsable (Dejar en blanco para la Unidad)</label><div class="custom-autocomplete"><input type="text" id="transfer-assigned" class="form-control" placeholder="Buscar..." autocomplete="off"><ul id="transfer-assigned-list" class="autocomplete-list hidden"></ul></div></div><div class="form-group"><label class="input-label">O Unidad Directa</label><select id="transfer-unit-select" class="form-control custom-select"></select></div><div class="form-group"><label class="input-label">Observaciones (Obligatorio)</label><textarea id="transfer-obs" class="form-control" rows="3" required></textarea></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('transfer-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Traspasar</button></div></form></div></div>
 
     <div id="loan-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--info); margin-bottom: 20px;"><i class="fas fa-handshake"></i> Prestar Bien</h2><form id="loan-form"><input type="hidden" id="loan-item-index"><div class="form-row"><div class="form-group"><label class="input-label">Prestar a (Obligatorio)</label><div class="custom-autocomplete"><input type="text" id="loan-target" class="form-control" placeholder="Buscar..." autocomplete="off" required><ul id="loan-target-list" class="autocomplete-list hidden"></ul></div></div><div class="form-group"><label class="input-label">Fecha Límite (Obligatorio)</label><input type="date" id="loan-date" class="form-control" required></div></div><div class="form-group"><label class="input-label">Observaciones (Obligatorio)</label><textarea id="loan-obs" class="form-control" rows="2" required></textarea></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('loan-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Prestar</button></div></form></div></div>
 
     <div id="confirm-receipt-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-check-double"></i> Confirmar Recepción</h2><form id="confirm-receipt-form"><input type="hidden" id="confirm-item-index"><div style="background: rgba(0,0,0,0.1); padding:15px; border-radius:10px; margin-bottom:15px;"><p><strong>Obs. del Emisor:</strong></p><p id="confirm-obs-text" style="color:var(--warning); font-style:italic; margin-top:5px;"></p></div><div class="form-group"><label class="input-label">Tus observaciones (Opcional)</label><textarea id="confirm-my-obs" class="form-control" rows="2"></textarea></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('confirm-receipt-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Confirmar Recibo</button></div></form></div></div>
 
-    <div id="chat-action-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 id="chat-action-title" style="color: var(--accent); margin-bottom: 20px;">Acción de Solicitud</h2><form id="chat-action-form"><input type="hidden" id="chat-action-id"><input type="hidden" id="chat-action-type"><div id="chat-action-item-container" class="hidden"><p style="margin-bottom: 10px; color: var(--text-secondary);">Bien a Enviar:</p><div id="chat-action-suggestions" style="margin-bottom: 15px;" class="hidden"></div><div class="form-group" style="display: flex; gap: 10px;"><input type="text" id="chat-action-selected-item-name" class="form-control" placeholder="Ningún bien..." readonly required><input type="hidden" id="chat-action-item-id"><button type="button" id="btn-open-inventory-selector" class="action-btn btn-info" style="white-space: nowrap;"><i class="fas fa-search"></i> Buscar</button></div><div class="form-group" style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px;"><label style="cursor: pointer;"><input type="radio" name="chat_action_mode" value="prestamo" checked> Préstamo</label><label style="cursor: pointer;"><input type="radio" name="chat_action_mode" value="traspaso"> Traspaso</label></div><div class="form-group" id="chat-action-date-group"><label class="input-label">Fecha Límite</label><input type="date" id="chat-action-return-date" class="form-control"></div></div><div class="form-group"><label class="input-label">Observaciones (Obligatorio)</label><textarea id="chat-action-obs" class="form-control" rows="3" required></textarea></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('chat-action-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Procesar</button></div></form></div></div>
+    <!-- MODAL DE ACCIÓN DE CHAT -->
+    <div id="chat-action-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h2 id="chat-action-title" style="color: var(--accent); margin-bottom: 20px;">Acción de Solicitud</h2>
+            <form id="chat-action-form">
+                <input type="hidden" id="chat-action-id">
+                <input type="hidden" id="chat-action-type">
+                <div id="chat-action-item-container" class="hidden">
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">Bien o Consumible a Entregar:</p>
+                    <div id="chat-action-suggestions" style="margin-bottom: 15px;" class="hidden"></div>
+                    <div class="form-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="chat-action-selected-item-name" class="form-control" style="flex: 1; min-width: 180px;" placeholder="Ningún bien..." readonly required>
+                        <input type="hidden" id="chat-action-item-id">
+                        <button type="button" id="btn-open-inventory-selector" class="action-btn btn-info" style="white-space: nowrap;"><i class="fas fa-search"></i> Buscar</button>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                        <label style="cursor: pointer;"><input type="radio" name="chat_action_mode" value="prestamo" checked> Préstamo</label>
+                        <label style="cursor: pointer;"><input type="radio" name="chat_action_mode" value="traspaso"> Traspaso</label>
+                        <label style="cursor: pointer; color: var(--warning); font-weight: 600;"><input type="radio" name="chat_action_mode" value="donacion"> Donación (Consumible)</label>
+                    </div>
+                    <div class="form-group" id="chat-action-date-group">
+                        <label class="input-label">Fecha Límite de Devolución</label>
+                        <input type="date" id="chat-action-return-date" class="form-control">
+                    </div>
+                    <div class="form-group hidden" id="chat-action-qty-group">
+                        <label class="input-label">Cantidad de Consumible a Donar</label>
+                        <input type="number" id="chat-action-donate-qty" class="form-control" min="1" value="1">
+                    </div>
+                </div>
+                <div class="form-group"><label class="input-label">Justificación / Observaciones (Obligatorio)</label><textarea id="chat-action-obs" class="form-control" rows="3" required></textarea></div>
+                <div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('chat-action-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Procesar</button></div>
+            </form>
+        </div>
+    </div>
 
-    <div id="select-inventory-modal" class="modal-overlay hidden" style="z-index: 30000;"><div class="glass-card modal-content" style="max-width: 800px; width: 90%; max-height: 85vh; display: flex; flex-direction: column;"><h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-boxes"></i> Seleccionar Bien</h2><div class="search-wrapper mb-4"><i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i><input type="text" id="search-select-inventory" class="form-control" placeholder="Buscar..." style="padding-left: 40px;"></div><div class="table-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--glass-border);"><table id="select-inventory-table" class="hover-table" style="margin: 0;"><thead style="position: sticky; top: 0; background: var(--glass-bg); z-index: 10;"><tr><th>ID</th><th>Bien</th><th>Cat</th><th>Estado</th><th>Acción</th></tr></thead><tbody></tbody></table></div><div class="form-row mt-4" style="justify-content: flex-end; margin-bottom: 0;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('select-inventory-modal').classList.add('hidden')">Cancelar</button></div></div></div>
+    <div id="select-inventory-modal" class="modal-overlay hidden" style="z-index: 30000;"><div class="glass-card modal-content" style="max-width: 800px; width: 95%; max-height: 85vh; display: flex; flex-direction: column;"><h2 style="color: var(--accent); margin-bottom: 20px;"><i class="fas fa-boxes"></i> Seleccionar Bien</h2><div class="search-wrapper mb-4"><i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i><input type="text" id="search-select-inventory" class="form-control" placeholder="Buscar..." style="padding-left: 40px;"></div><div class="table-container" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid var(--glass-border);"><table id="select-inventory-table" class="hover-table" style="margin: 0;"><thead style="position: sticky; top: 0; background: var(--glass-bg); z-index: 10;"><tr><th>ID</th><th>Bien</th><th>Cat / Stock</th><th>Estado</th><th>Acción</th></tr></thead><tbody></tbody></table></div><div class="form-row mt-4" style="justify-content: flex-end; margin-bottom: 0;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('select-inventory-modal').classList.add('hidden')">Cancelar</button></div></div></div>
 
-    <div id="complete-req-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-clipboard-check"></i> Registrar Compra</h2><form id="complete-req-form"><input type="hidden" id="comp-req-id"><div class="form-group"><label class="input-label">Nombre del Bien</label><input type="text" id="comp-req-name" class="form-control" required></div><div class="form-row"><div class="form-group w-50"><label class="input-label"><i class="fas fa-camera"></i> Foto</label><label for="comp-req-photo" class="form-control" style="cursor: pointer; background: rgba(0,0,0,0.2); border: 1px dashed var(--accent); text-align: center;"><i class="fas fa-upload"></i> <span id="comp-req-photo-name">Imagen</span></label><input type="file" id="comp-req-photo" accept="image/*" style="display:none;" required></div><div class="form-group w-50"><label class="input-label"><i class="fas fa-file-invoice"></i> Factura</label><label for="comp-req-invoice" class="form-control" style="cursor: pointer; background: rgba(0,0,0,0.2); border: 1px dashed var(--accent); text-align: center;"><i class="fas fa-upload"></i> <span id="comp-req-invoice-name">Archivo</span></label><input type="file" id="comp-req-invoice" accept="image/*,.pdf" style="display:none;" required></div></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('complete-req-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn" id="btn-save-req-item"><i class="fas fa-save"></i> Guardar</button></div></form></div></div>
+    <div id="complete-req-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color: var(--success); margin-bottom: 20px;"><i class="fas fa-clipboard-check"></i> Registrar Compra</h2><form id="complete-req-form"><input type="hidden" id="comp-req-id"><div class="form-group"><label class="input-label">Nombre del Bien</label><input type="text" id="comp-req-name" class="form-control" required></div><div class="form-row"><div class="form-group"><label class="input-label"><i class="fas fa-camera"></i> Foto</label><label for="comp-req-photo" class="form-control file-upload-label"><i class="fas fa-upload"></i> <span id="comp-req-photo-name">Imagen</span></label><input type="file" id="comp-req-photo" accept="image/*" style="display:none;" required></div><div class="form-group"><label class="input-label"><i class="fas fa-file-invoice"></i> Factura</label><label for="comp-req-invoice" class="form-control file-upload-label"><i class="fas fa-upload"></i> <span id="comp-req-invoice-name">Archivo</span></label><input type="file" id="comp-req-invoice" accept="image/*,.pdf" style="display:none;" required></div></div><div class="form-row mt-4" style="justify-content: flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('complete-req-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn" id="btn-save-req-item"><i class="fas fa-save"></i> Guardar</button></div></form></div></div>
 
-    <div id="item-details-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"><i class="fas fa-box-open"></i></div><h2 id="detail-name" style="margin-bottom: 5px;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 20px;"><strong>ID:</strong> <span id="detail-id"></span></p><div id="detail-images" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div><div style="text-align: left; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><p><strong>Categoría:</strong> <span id="detail-cat"></span></p><p><strong>Unidad:</strong> <span id="detail-unit"></span></p><p><strong>Responsable:</strong> <span id="detail-assigned"></span></p><p><strong>Estado:</strong> <span id="detail-status" style="color: var(--success);"></span></p><p><strong>Obs:</strong> <span id="detail-obs" style="color: var(--warning);"></span></p></div><button class="action-btn btn-danger w-100 justify-center" onclick="document.getElementById('item-details-modal').classList.add('hidden')">Cerrar</button></div></div>
+    <div id="item-details-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 400px; text-align: center;"><div style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"><i class="fas fa-box-open"></i></div><h2 id="detail-name" style="margin-bottom: 5px;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 20px;"><strong>ID:</strong> <span id="detail-id"></span></p><div id="detail-images" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div><div style="text-align: left; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; margin-bottom: 20px;"><p><strong>Categoría:</strong> <span id="detail-cat"></span></p><p><strong>Stock / Cant.:</strong> <span id="detail-qty"></span></p><p><strong>Unidad:</strong> <span id="detail-unit"></span></p><p><strong>Responsable:</strong> <span id="detail-assigned"></span></p><p><strong>Estado:</strong> <span id="detail-status" style="color: var(--success);"></span></p><p><strong>Obs:</strong> <span id="detail-obs" style="color: var(--warning);"></span></p></div><button class="action-btn btn-danger w-100 justify-center" onclick="document.getElementById('item-details-modal').classList.add('hidden')">Cerrar</button></div></div>
 
-    <div id="edit-modal" class="modal-overlay hidden"><div class="glass-card modal-content"><h2 style="color:var(--accent);"><i class="fas fa-edit"></i> Editar Bien</h2><form id="edit-inventory-form"><input type="hidden" id="edit-item-index"><div class="form-group"><label class="input-label">Nombre</label><input type="text" id="edit-item-name" class="form-control" required></div><div class="form-group"><label class="input-label">Categoría</label><select id="edit-item-category" class="form-control custom-select" required><option value="Equipos IT">Equipos IT</option><option value="Mobiliario">Mobiliario</option><option value="Herramientas">Herramientas</option></select></div><div class="form-row mt-4" style="justify-content:flex-end;"><button type="button" class="action-btn btn-danger" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Guardar</button></div></form></div></div>
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h2 style="color:var(--accent);"><i class="fas fa-edit"></i> Editar Bien / Stock</h2>
+            <form id="edit-inventory-form">
+                <input type="hidden" id="edit-item-index">
+                <div class="form-group"><label class="input-label">Nombre</label><input type="text" id="edit-item-name" class="form-control" required></div>
+                <div class="form-group"><label class="input-label">Categoría</label>
+                    <select id="edit-item-category" class="form-control custom-select" required>
+                        <option value="Equipos IT">Equipos IT</option>
+                        <option value="Mobiliario">Mobiliario</option>
+                        <option value="Herramientas">Herramientas</option>
+                        <option value="Consumibles">Consumibles</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="input-label">Cantidad / Stock Disponible</label><input type="number" id="edit-item-qty" class="form-control" min="0" required></div>
+                <div class="form-row mt-4" style="justify-content:flex-end;">
+                    <button type="button" class="action-btn btn-danger" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancelar</button>
+                    <button type="submit" class="submit-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <div id="user-modal" class="modal-overlay hidden"><div class="glass-card modal-content" style="max-width: 550px;"><h2 id="user-modal-title" style="color: var(--accent); margin-bottom: 15px;"><i class="fas fa-user-edit"></i> Usuario</h2><div id="profile-card-view" style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; flex-wrap: wrap;"><div style="width: 65px; height: 65px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white;"><i class="fas fa-user-circle"></i></div><div><h2 id="profile-name" style="margin-bottom: 3px; color: var(--accent); font-size: 1.2rem;">Nombre</h2><p style="color: var(--text-secondary); margin-bottom: 6px; font-size: 0.85rem;"><span id="profile-cedula"></span> | <span id="profile-email"></span></p><div style="display: flex; gap: 8px;"><span id="profile-role" style="background: var(--info); color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Rol</span><span id="profile-status" style="padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">Estado</span></div></div></div><form id="edit-user-form"><input type="hidden" id="edit-user-id"><div class="form-row"><div class="form-group"><label class="input-label">Nombre</label><input type="text" id="edit-user-name" class="form-control" required></div><div class="form-group"><label class="input-label">Cédula</label><input type="text" id="edit-user-cedula" class="form-control" required></div></div><div class="form-row"><div class="form-group"><label class="input-label">Correo (Login)</label><input type="email" id="edit-user-email" class="form-control" required></div></div><div class="form-row"><div class="form-group"><label class="input-label">Rol</label><select id="edit-user-role" class="form-control custom-select" required><option value="ADMIN">Administrador</option><option value="SUPERVISOR">Supervisor</option><option value="ENCARGADO">Encargado</option><option value="VIEWER">Visualizador</option></select></div><div class="form-group"><label class="input-label">Unidad</label><select id="edit-user-unit" class="form-control custom-select" required></select></div></div><div id="status-checkbox-container" style="display:flex; gap:10px; align-items:center; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px;"><input type="checkbox" id="edit-user-status" style="width:18px; height:18px; cursor: pointer;"><span style="color:var(--danger); font-weight:bold;">Inhabilitar Usuario</span></div><div class="form-row mt-4" style="justify-content: flex-end; border-top: 1px solid var(--glass-border); padding-top: 15px;"><button type="button" class="action-btn" style="background: rgba(255,255,255,0.1); color: var(--text-primary);" onclick="document.getElementById('user-modal').classList.add('hidden')">Cancelar</button><button type="submit" class="submit-btn">Guardar</button></div></form></div></div>
 

@@ -25,7 +25,7 @@ export const db = {
         { id: 23, email: 'ggonzalez@cendit.gob.ve', pass: '1234', name: 'Gabriel Gonzalez', cedula: '23.623.637', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
         { id: 24, email: 'jmanjarres@cendit.gob.ve', pass: '1234', name: 'Jarson Manjares', cedula: '20.492.991', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
         { id: 25, email: 'rbetancourt@cendit.gob.ve', pass: '1234', name: 'Ray Betancourt', cedula: '20.589.350', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
-        { id: 26, email: 'hmedina@cendit.gob.ve', pass: '1234', name: 'Harrinso Medina', cedula: '25.227.333', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
+        { id: 26, email: 'hmedina@cendit.gob.ve', pass: '1234', name: 'Harrinso Medina', cedula: '25.227.333', role: 'ENCARGADO', dir: 'DA', unit: 'USNT', active: true },
         { id: 27, email: 'jfernandez@cendit.gob.ve', pass: '1234', name: 'Jorge Fernandez', cedula: '27.516.318', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
         { id: 28, email: 'efernandez@cendit.gob.ve', pass: '1234', name: 'Edgar Fernández', cedula: '12.399.171', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
         { id: 29, email: 'wmarcano@cendit.gob.ve', pass: '1234', name: 'Willian Marcano', cedula: '28.007.522', role: 'VIEWER', dir: 'Sin Asignar', unit: 'Ninguna', active: true },
@@ -84,9 +84,11 @@ export const db = {
         { id: 82, email: 'ralvarado@cendit.gob.ve', pass: '1234', name: 'Ramona Alvarado', cedula: '9.050.958', role: 'ENCARGADO', dir: 'DA', unit: 'Bienes Nacionales', active: true }
     ],
     inventory: [
-        { id: 'INV-100', name: 'Router Cisco', cat: 'Equipos IT', unit: 'UTST', status: 'Activo', assignedTo: 'Luis Escobar', assignedEmail: 'lescobar@cendit.gob.ve', obs: 'Perfecto', returnDate: '', originalUnit: '' },
-        { id: 'INV-101', name: 'Laptop Dell', cat: 'Equipos IT', unit: 'Bienes Nacionales', status: 'Activo', assignedTo: 'Ramona Alvarado', assignedEmail: 'ralvarado@cendit.gob.ve', obs: 'Uso diario', returnDate: '', originalUnit: '' },
-        { id: 'INV-102', name: 'Impresora HP', cat: 'Equipos IT', unit: 'UTST', status: 'Activo', assignedTo: '', assignedEmail: '', obs: 'Uso general', returnDate: '', originalUnit: '' }
+        { id: 'INV-100', name: 'Router Cisco', cat: 'Equipos IT', qty: 1, unit: 'UTST', status: 'Activo', assignedTo: 'Luis Escobar', assignedEmail: 'lescobar@cendit.gob.ve', obs: 'Perfecto', returnDate: '', originalUnit: '' },
+        { id: 'INV-101', name: 'Laptop Dell', cat: 'Equipos IT', qty: 1, unit: 'Bienes Nacionales', status: 'Activo', assignedTo: 'Ramona Alvarado', assignedEmail: 'ralvarado@cendit.gob.ve', obs: 'Uso diario', returnDate: '', originalUnit: '' },
+        { id: 'INV-102', name: 'Impresora HP', cat: 'Equipos IT', qty: 1, unit: 'UTST', status: 'Activo', assignedTo: '', assignedEmail: '', obs: 'Uso general', returnDate: '', originalUnit: '' },
+        { id: 'INV-103', name: 'Conectores RJ45 Cat6 (Paquete)', cat: 'Consumibles', qty: 5, unit: 'UTST', status: 'Activo', assignedTo: '', assignedEmail: '', obs: 'Consumible de red', returnDate: '', originalUnit: '' },
+        { id: 'INV-104', name: 'Resmas de Papel Carta', cat: 'Consumibles', qty: 15, unit: 'Bienes Nacionales', status: 'Activo', assignedTo: '', assignedEmail: '', obs: 'Papelería general', returnDate: '', originalUnit: '' }
     ],
     organigrama: {
         'PRESIDENCIA': ['Todas', 'Atención al Ciudadano'],
@@ -94,7 +96,7 @@ export const db = {
         'DA': ['USNT', 'USAT', 'Bienes Nacionales'],
         'DE': []
     },
-    chatMessages: [], history: [], audit: [], notifications: [], requisitions: []
+    chatMessages: [], history: [], audit: [], notifications: [], requisitions: [], deletedItems: [], donations: []
 };
 
 export let state = { currentUser: null };

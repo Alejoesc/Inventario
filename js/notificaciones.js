@@ -1,10 +1,20 @@
 import { db, state } from './db.js';
 
 export function initNotificaciones() {
-    const bellBtn = document.getElementById('bell-btn'); const panel = document.getElementById('notif-panel'); const closeBtn = document.getElementById('close-notif-btn');
+    const bellBtn = document.getElementById('bell-btn'); 
+    const panel = document.getElementById('notif-panel'); 
+    const closeBtn = document.getElementById('close-notif-btn');
     
     bellBtn.onclick = (e) => { 
         e.stopPropagation(); 
+        
+        // Posicionar dinámicamente el panel respecto a la campana sin recortes
+        const rect = bellBtn.getBoundingClientRect();
+        const topPos = Math.max(rect.bottom + 10, 55);
+        const leftPos = Math.min(Math.max(12, rect.left - 180), window.innerWidth - 335);
+        panel.style.top = `${topPos}px`;
+        panel.style.left = `${Math.max(12, leftPos)}px`;
+
         panel.classList.toggle('hidden'); 
         const misNotifsUnread = db.notifications.filter(n => n.to === state.currentUser.email && n.read === false);
         misNotifsUnread.forEach(n => n.read = true);

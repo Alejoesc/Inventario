@@ -37,6 +37,7 @@ export function initAuth(onLoginSuccess) {
     document.getElementById('logout-btn').onclick = () => {
         logAudit("Cierre de Sesión", "Salida del sistema.");
         state.currentUser = null;
+        document.getElementById('notif-panel').classList.add('hidden');
         document.getElementById('app-view').style.display = 'none';
         document.getElementById('login-view').classList.add('active');
         loginForm.reset();

@@ -65,7 +65,7 @@ export function renderPrestamosTables() {
         btn.onclick = (e) => {
             const itemId = e.currentTarget.dataset.id;
             const item = db.inventory.find(x => x.id === itemId);
-            if(confirm('¿Deseas devolver este bien a la unidad dueña original?')) {
+            window.showConfirm(`¿Deseas devolver el bien "${item.name}" a la unidad dueña original?`, () => {
                 item.status = 'Activo'; 
                 item.assignedTo = ''; 
                 item.assignedEmail = ''; 
@@ -76,7 +76,7 @@ export function renderPrestamosTables() {
                 addHistory("Devolución", `${state.currentUser.name} devolvió el bien ${item.name}`); 
                 logAudit("Devolución", `Devolvió el bien ${item.id}`);
                 document.dispatchEvent(new Event('inventoryUpdated')); 
-            }
+            }, 'Confirmar Devolución');
         };
     });
 }

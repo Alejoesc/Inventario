@@ -11,7 +11,7 @@ export function initRespaldo() {
     
     fileInput.onchange = (e) => {
         if(e.target.files.length > 0) { document.getElementById('import-file-name').textContent = e.target.files[0].name; document.getElementById('import-file-name').style.color = 'var(--success)'; }
-        else { document.getElementById('import-file-name').textContent = "Seleccionar archivo JSON"; document.getElementById('import-file-name').style.color = 'var(--text-primary)'; }
+        else { document.getElementById('import-file-name').textContent = "Seleccionar JSON"; document.getElementById('import-file-name').style.color = 'var(--text-primary)'; }
     };
 
     document.getElementById('btn-import-db').onclick = () => {

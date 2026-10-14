@@ -1,7 +1,7 @@
 import { db, state, addNotification, logAudit } from './db.js';
 import { initAuth } from './auth.js';
 import { initDashboard } from './dashboard.js';
-import { initInventario, renderMisBienesTable } from './inventario.js';
+import { initInventario, renderMisBienesTable, renderDonationsTable, updateDonationSelects } from './inventario.js';
 import { initOrganigrama } from './organigrama.js';
 import { initChat, renderChat } from './chat.js';
 import { initUsuarios } from './usuarios.js';
@@ -18,7 +18,25 @@ window.showToast = function(msg, type = 'success') {
     toast.className = `toast ${type}`;
     toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
     container.appendChild(toast);
-    setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+    setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
+};
+
+window.showConfirm = function(msg, onConfirm, title = '¿Estás seguro?') {
+    const modal = document.getElementById('custom-confirm-modal');
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-msg').textContent = msg;
+    modal.classList.remove('hidden');
+
+    const okBtn = document.getElementById('confirm-modal-ok');
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+
+    okBtn.onclick = () => {
+        modal.classList.add('hidden');
+        if (onConfirm) onConfirm();
+    };
+    cancelBtn.onclick = () => {
+        modal.classList.add('hidden');
+    };
 };
 
 export function setupAutocomplete(inputId, listId) {
@@ -167,13 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
             e.currentTarget.classList.add('active');
-            document.getElementById(e.currentTarget.getAttribute('data-target')).classList.add('active');
+            const target = e.currentTarget.getAttribute('data-target');
+            document.getElementById(target).classList.add('active');
             
             if(sidebar) sidebar.classList.remove('active');
             if(overlay) overlay.classList.remove('active');
 
-            if(e.currentTarget.getAttribute('data-target') === 'my-items-module') renderMisBienesTable();
-            if(e.currentTarget.getAttribute('data-target') === 'loans-module') renderPrestamosTables();
+            if(target === 'my-items-module') renderMisBienesTable();
+            if(target === 'loans-module') renderPrestamosTables();
+            if(target === 'donations-module') { updateDonationSelects(); renderDonationsTable(); }
         };
     });
 
@@ -181,12 +201,18 @@ document.addEventListener('DOMContentLoaded', () => {
         setupAutocomplete('item-assigned', 'item-assigned-list');
         setupAutocomplete('transfer-assigned', 'transfer-assigned-list');
         setupAutocomplete('loan-target', 'loan-target-list');
+        setupAutocomplete('donation-receiver', 'donation-receiver-list');
 
         const today = new Date();
         db.inventory.forEach(item => {
             if(item.status.includes('Prestado') && item.assignedEmail === state.currentUser.email && item.returnDate) {
                 const retDate = new Date(item.returnDate);
                 if(retDate <= today) addNotification(state.currentUser.email, `ALERTA ROJA: Tienes que devolver el bien ${item.name} HOY o la fecha ya está vencida.`);
+            }
+            if(item.cat === 'Consumibles' && (item.qty ?? 1) <= 5) {
+                if(item.unit === state.currentUser.unit || state.currentUser.role === 'ADMIN') {
+                    addNotification(state.currentUser.email, `ALERTA DE STOCK BAJO: Quedan solo ${item.qty} unidades del consumible "${item.name}" (${item.unit}).`);
+                }
             }
         });
 
@@ -200,5 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('inventoryUpdated', () => {
         renderMisBienesTable();
         renderPrestamosTables();
+        updateDonationSelects();
+        renderDonationsTable();
     });
 });

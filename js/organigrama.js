@@ -34,7 +34,7 @@ function renderOrganigrama() {
         const zone = document.createElement('div'); zone.className = 'dir-zone glass-card'; zone.dataset.dir = dir;
         
         let dirActions = '';
-        if(state.currentUser.role === 'ADMIN') { dirActions = `<i class="fas fa-edit edit-dir" data-dir="${dir}" style="cursor:pointer; margin-left:15px; font-size:1rem; color:var(--text-secondary);" title="Editar"></i> <i class="fas fa-trash delete-dir" data-dir="${dir}" style="cursor:pointer; margin-left:5px; font-size:1rem; color:var(--danger);" title="Eliminar"></i>`; }
+        if(state.currentUser.role === 'ADMIN') { dirActions = `<i class="fas fa-edit edit-dir" data-dir="${dir}" style="cursor:pointer; margin-left:15px; font-size:1rem; color:var(--text-secondary);" title="Editar"></i> <i class="fas fa-trash delete-dir" data-dir="${dir}" style="cursor:pointer; margin-left:8px; font-size:1rem; color:var(--danger);" title="Eliminar"></i>`; }
 
         zone.innerHTML = `<h3 style="margin-bottom: 10px; color: var(--accent); border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; display:flex; align-items:center;"><i class="fas fa-building" style="margin-right:8px;"></i> ${dir} ${dirActions}</h3><div class="units-container"></div>`;
         const uCont = zone.querySelector('.units-container');
@@ -60,8 +60,19 @@ function renderOrganigrama() {
     }
     
     if(state.currentUser.role === 'ADMIN') {
-        document.querySelectorAll('.delete-dir').forEach(btn => btn.onclick = (e) => { const dir = e.currentTarget.dataset.dir; if(db.organigrama[dir].length > 0) return window.showToast('No puedes eliminar una dirección que tiene unidades.', 'error'); if(confirm(`¿Eliminar dirección ${dir}?`)) { delete db.organigrama[dir]; window.showToast("Dirección eliminada."); renderOrganigrama(); document.dispatchEvent(new Event('orgUpdated')); } });
-        document.querySelectorAll('.delete-unit').forEach(btn => btn.onclick = (e) => { const dir = e.currentTarget.dataset.dir; const unit = e.currentTarget.dataset.unit; if(confirm(`¿Eliminar unidad ${unit}?`)) { db.organigrama[dir] = db.organigrama[dir].filter(u => u !== unit); window.showToast("Unidad eliminada."); renderOrganigrama(); document.dispatchEvent(new Event('orgUpdated')); } });
+        document.querySelectorAll('.delete-dir').forEach(btn => btn.onclick = (e) => { 
+            const dir = e.currentTarget.dataset.dir; 
+            if(db.organigrama[dir].length > 0) return window.showToast('No puedes eliminar una dirección que tiene unidades.', 'error'); 
+            window.showConfirm(`¿Seguro que deseas eliminar la dirección "${dir}"?`, () => {
+                delete db.organigrama[dir]; window.showToast("Dirección eliminada."); renderOrganigrama(); document.dispatchEvent(new Event('orgUpdated'));
+            }, 'Eliminar Dirección');
+        });
+        document.querySelectorAll('.delete-unit').forEach(btn => btn.onclick = (e) => { 
+            const dir = e.currentTarget.dataset.dir; const unit = e.currentTarget.dataset.unit; 
+            window.showConfirm(`¿Seguro que deseas eliminar la unidad "${unit}"?`, () => {
+                db.organigrama[dir] = db.organigrama[dir].filter(u => u !== unit); window.showToast("Unidad eliminada."); renderOrganigrama(); document.dispatchEvent(new Event('orgUpdated'));
+            }, 'Eliminar Unidad');
+        });
         document.querySelectorAll('.edit-dir').forEach(btn => btn.onclick = (e) => { document.getElementById('edit-org-type').value = 'dir'; document.getElementById('edit-org-oldname').value = e.currentTarget.dataset.dir; document.getElementById('edit-org-newname').value = e.currentTarget.dataset.dir; document.getElementById('edit-org-modal').classList.remove('hidden'); });
         document.querySelectorAll('.edit-unit').forEach(btn => btn.onclick = (e) => { document.getElementById('edit-org-type').value = 'unit'; document.getElementById('edit-org-parent').value = e.currentTarget.dataset.dir; document.getElementById('edit-org-oldname').value = e.currentTarget.dataset.unit; document.getElementById('edit-org-newname').value = e.currentTarget.dataset.unit; document.getElementById('edit-org-modal').classList.remove('hidden'); });
     }
