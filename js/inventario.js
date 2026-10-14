@@ -82,7 +82,6 @@ export function initInventario() {
         item.pendingName = null; 
         item.pendingUnit = null;
 
-        // Vínculo inteligente con el Chat
         let chatInput = document.getElementById('confirm-chat-msg-id');
         if (chatInput && chatInput.value) {
             const chatMsg = db.chatMessages.find(m => m.id === parseInt(chatInput.value));
@@ -144,7 +143,6 @@ export function renderTable() {
     attachTableEvents();
 }
 
-// ESTA FUNCIÓN SE HABÍA BORRADO, AQUÍ ESTÁ RESTAURADA
 export function renderMisBienesTable() {
     const tbody = document.querySelector('#my-items-table tbody'); if(!tbody) return; tbody.innerHTML = '';
     const myItems = db.inventory.filter(i => i.assignedEmail === state.currentUser.email || i.pendingEmail === state.currentUser.email);
